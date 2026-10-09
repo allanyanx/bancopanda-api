@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BancoPanda.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20261009171437_InitialCreate")]
+    [Migration("20261009174720_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -29,165 +29,204 @@ namespace BancoPanda.Api.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<DateTime>("FechaApertura")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_apertura");
 
                     b.Property<string>("Moneda")
                         .IsRequired()
                         .HasMaxLength(3)
-                        .HasColumnType("character varying(3)");
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("moneda");
 
                     b.Property<string>("NumeroCuenta")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("numero_cuenta");
 
                     b.Property<decimal>("Saldo")
                         .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("saldo");
 
                     b.Property<string>("Tipo")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("tipo");
 
                     b.Property<Guid>("UsuarioId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("usuario_id");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_cuentas");
 
                     b.HasIndex("NumeroCuenta")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_cuentas_numero_cuenta");
 
-                    b.HasIndex("UsuarioId");
+                    b.HasIndex("UsuarioId")
+                        .HasDatabaseName("ix_cuentas_usuario_id");
 
-                    b.ToTable("Cuentas");
+                    b.ToTable("cuentas", (string)null);
                 });
 
             modelBuilder.Entity("BancoPanda.Api.Entities.Movimiento", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<string>("Categoria")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("categoria");
 
                     b.Property<Guid>("CuentaId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("cuenta_id");
 
                     b.Property<string>("Descripcion")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("descripcion");
 
                     b.Property<DateTime>("Fecha")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha");
 
                     b.Property<decimal>("Monto")
                         .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("monto");
 
                     b.Property<string>("Tipo")
                         .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("tipo");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_movimientos");
 
-                    b.HasIndex("CuentaId", "Fecha");
+                    b.HasIndex("CuentaId", "Fecha")
+                        .HasDatabaseName("ix_movimientos_cuenta_id_fecha");
 
-                    b.ToTable("Movimientos");
+                    b.ToTable("movimientos", (string)null);
                 });
 
             modelBuilder.Entity("BancoPanda.Api.Entities.Tarjeta", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<bool>("Activa")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("activa");
 
                     b.Property<Guid>("CuentaId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("cuenta_id");
 
                     b.Property<DateOnly>("FechaExpiracion")
-                        .HasColumnType("date");
+                        .HasColumnType("date")
+                        .HasColumnName("fecha_expiracion");
 
                     b.Property<string>("Marca")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("marca");
 
                     b.Property<string>("Tipo")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("tipo");
 
                     b.Property<string>("UltimosDigitos")
                         .IsRequired()
                         .HasMaxLength(4)
                         .HasColumnType("character(4)")
+                        .HasColumnName("ultimos_digitos")
                         .IsFixedLength();
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_tarjetas");
 
-                    b.HasIndex("CuentaId");
+                    b.HasIndex("CuentaId")
+                        .HasDatabaseName("ix_tarjetas_cuenta_id");
 
-                    b.ToTable("Tarjetas");
+                    b.ToTable("tarjetas", (string)null);
                 });
 
             modelBuilder.Entity("BancoPanda.Api.Entities.Usuario", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<string>("Apellidos")
                         .IsRequired()
                         .HasMaxLength(60)
-                        .HasColumnType("character varying(60)");
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("apellidos");
 
                     b.Property<string>("Cedula")
                         .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("cedula");
 
                     b.Property<string>("ContrasenaHash")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("contrasena_hash");
 
                     b.Property<string>("Correo")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("correo");
 
                     b.Property<DateTime>("FechaRegistro")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_registro");
 
                     b.Property<string>("Nombres")
                         .IsRequired()
                         .HasMaxLength(60)
-                        .HasColumnType("character varying(60)");
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("nombres");
 
                     b.Property<string>("Telefono")
                         .HasMaxLength(15)
-                        .HasColumnType("character varying(15)");
+                        .HasColumnType("character varying(15)")
+                        .HasColumnName("telefono");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_usuarios");
 
                     b.HasIndex("Cedula")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_usuarios_cedula");
 
                     b.HasIndex("Correo")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_usuarios_correo");
 
-                    b.ToTable("Usuarios");
+                    b.ToTable("usuarios", (string)null);
                 });
 
             modelBuilder.Entity("BancoPanda.Api.Entities.Cuenta", b =>
@@ -196,7 +235,8 @@ namespace BancoPanda.Api.Migrations
                         .WithMany("Cuentas")
                         .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_cuentas_usuarios_usuario_id");
 
                     b.Navigation("Usuario");
                 });
@@ -207,7 +247,8 @@ namespace BancoPanda.Api.Migrations
                         .WithMany("Movimientos")
                         .HasForeignKey("CuentaId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_movimientos_cuentas_cuenta_id");
 
                     b.Navigation("Cuenta");
                 });
@@ -218,7 +259,8 @@ namespace BancoPanda.Api.Migrations
                         .WithMany("Tarjetas")
                         .HasForeignKey("CuentaId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_tarjetas_cuentas_cuenta_id");
 
                     b.Navigation("Cuenta");
                 });
