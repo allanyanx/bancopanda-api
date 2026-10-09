@@ -2,6 +2,33 @@
 
 API REST de BancoPanda hecha con **.NET 10** y **PostgreSQL**.
 
+## Estructura del proyecto
+
+Organizado por funcionalidad (*feature-first*):
+
+```
+bancopanda-api/
+├── BancoPanda.slnx                 # Solución
+└── BancoPanda.Api/
+    ├── Data/
+    │   └── AppDbContext.cs         # Conexión con PostgreSQL (EF Core)
+    ├── Entities/                   # Tablas de la base de datos
+    │   ├── Usuario.cs
+    │   ├── Cuenta.cs
+    │   ├── Tarjeta.cs
+    │   ├── Movimiento.cs
+    │   └── Enum.cs                 # TipoCuenta, TipoMovimiento, CategoriaMovimiento...
+    ├── Features/                   # Una carpeta por funcionalidad (en construcción)
+    │   ├── Auth/                   # Registro y login (JWT)
+    │   ├── Accounts/               # Dashboard: cuentas, tarjetas y movimientos
+    │   └── Users/                  # Perfil del usuario
+    ├── Migrations/                 # Migraciones generadas por EF Core
+    ├── Properties/
+    │   └── launchSettings.json     # Puertos de ejecución local
+    ├── appsettings.json            # Configuración (sin contraseñas)
+    └── Program.cs                  # Punto de entrada y registro de servicios
+```
+
 ## Requisitos
 
 - [.NET SDK 10](https://dotnet.microsoft.com/download)
