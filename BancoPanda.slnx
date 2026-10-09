@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/BancoPanda.APi/">
+    <Project Path="BancoPanda.APi/BancoPanda.Api.csproj" />
+  </Folder>
+</Solution>

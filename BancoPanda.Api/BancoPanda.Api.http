@@ -1,0 +1,6 @@
+@BancoPanda.Api_HostAddress = http://localhost:5258
+
+GET {{BancoPanda.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
