@@ -2,7 +2,7 @@
 
 public class Cuenta
 {
-    public Guid Id { get; set; }
+    public Guid CuentaId { get; set; }
     public string NumeroCuenta { get; set; } = string.Empty;
     public TipoCuenta Tipo { get; set; }
     public decimal Saldo { get; set; }

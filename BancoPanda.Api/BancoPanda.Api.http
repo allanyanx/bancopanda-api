@@ -1,6 +1,32 @@
 @BancoPanda.Api_HostAddress = http://localhost:5258
 
-GET {{BancoPanda.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+### Registro: crea el usuario, su cuenta de ahorros y su tarjeta
+POST {{BancoPanda.Api_HostAddress}}/api/auth/registro
+Content-Type: application/json
 
-###
+{
+  "cedula": "1234567890",
+  "nombres": "Andrea",
+  "apellidos": "Barroso Torres",
+  "correo": "prueba@bancopanda.test",
+  "telefono": "0987654321",
+  "contrasena": "Panda2026"
+}
+
+### Login con correo
+POST {{BancoPanda.Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "identificador": "prueba@bancopanda.test",
+  "contrasena": "Panda2026"
+}
+
+### Login con cédula
+POST {{BancoPanda.Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "identificador": "1234567890",
+  "contrasena": "Panda2026"
+}

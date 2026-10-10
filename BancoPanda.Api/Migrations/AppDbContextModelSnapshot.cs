@@ -24,10 +24,10 @@ namespace BancoPanda.Api.Migrations
 
             modelBuilder.Entity("BancoPanda.Api.Entities.Cuenta", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("CuentaId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
-                        .HasColumnName("id");
+                        .HasColumnName("cuenta_id");
 
                     b.Property<DateTime>("FechaApertura")
                         .HasColumnType("timestamp with time zone")
@@ -60,7 +60,7 @@ namespace BancoPanda.Api.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("usuario_id");
 
-                    b.HasKey("Id")
+                    b.HasKey("CuentaId")
                         .HasName("pk_cuentas");
 
                     b.HasIndex("NumeroCuenta")
@@ -75,10 +75,10 @@ namespace BancoPanda.Api.Migrations
 
             modelBuilder.Entity("BancoPanda.Api.Entities.Movimiento", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("MovimientoId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
-                        .HasColumnName("id");
+                        .HasColumnName("movimiento_id");
 
                     b.Property<string>("Categoria")
                         .IsRequired()
@@ -111,7 +111,7 @@ namespace BancoPanda.Api.Migrations
                         .HasColumnType("character varying(10)")
                         .HasColumnName("tipo");
 
-                    b.HasKey("Id")
+                    b.HasKey("MovimientoId")
                         .HasName("pk_movimientos");
 
                     b.HasIndex("CuentaId", "Fecha")
@@ -122,10 +122,10 @@ namespace BancoPanda.Api.Migrations
 
             modelBuilder.Entity("BancoPanda.Api.Entities.Tarjeta", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("TarjetaId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
-                        .HasColumnName("id");
+                        .HasColumnName("tarjeta_id");
 
                     b.Property<bool>("Activa")
                         .HasColumnType("boolean")
@@ -158,7 +158,7 @@ namespace BancoPanda.Api.Migrations
                         .HasColumnName("ultimos_digitos")
                         .IsFixedLength();
 
-                    b.HasKey("Id")
+                    b.HasKey("TarjetaId")
                         .HasName("pk_tarjetas");
 
                     b.HasIndex("CuentaId")
@@ -169,10 +169,10 @@ namespace BancoPanda.Api.Migrations
 
             modelBuilder.Entity("BancoPanda.Api.Entities.Usuario", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("UsuarioId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
-                        .HasColumnName("id");
+                        .HasColumnName("usuario_id");
 
                     b.Property<string>("Apellidos")
                         .IsRequired()
@@ -212,7 +212,7 @@ namespace BancoPanda.Api.Migrations
                         .HasColumnType("character varying(15)")
                         .HasColumnName("telefono");
 
-                    b.HasKey("Id")
+                    b.HasKey("UsuarioId")
                         .HasName("pk_usuarios");
 
                     b.HasIndex("Cedula")

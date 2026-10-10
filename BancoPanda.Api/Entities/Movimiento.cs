@@ -2,7 +2,7 @@
 
 public class Movimiento
 {
-    public Guid Id { get; set; }
+    public Guid MovimientoId { get; set; }
     public string Descripcion { get; set; } = string.Empty;
     public decimal Monto { get; set; }                    // Siempre positivo
     public TipoMovimiento Tipo { get; set; }              // Ingreso suma, Egreso resta
