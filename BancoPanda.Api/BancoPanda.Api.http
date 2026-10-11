@@ -22,6 +22,7 @@ Content-Type: application/json
   "contrasena": "Panda2026"
 }
 
+
 ### Login con cédula
 POST {{BancoPanda.Api_HostAddress}}/api/auth/login
 Content-Type: application/json
@@ -30,3 +31,23 @@ Content-Type: application/json
   "identificador": "1234567890",
   "contrasena": "Panda2026"
 }
+### Ver mi perfil
+@token = {{login.response.body.$.token}}
+GET {{BancoPanda.Api_HostAddress}}/api/usuarios/me
+Authorization: Bearer {{token}}
+
+### Editar mi perfil 
+PUT {{BancoPanda.Api_HostAddress}}/api/usuarios/me
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombres": "Andrea Melina",
+  "apellidos": "Barroso Torres",
+  "correo": "prueba@bancopanda.test",
+  "telefono": "0987654321",
+  "contrasenaNueva": null
+}
+
+### Sin token: debe responder 401
+GET {{BancoPanda.Api_HostAddress}}/api/usuarios/me
