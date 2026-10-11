@@ -14,21 +14,33 @@ public class UsersController(UsersService users) : ControllerBase
 {
     [HttpGet("me")]
     [ProducesResponseType<UsuarioResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Obtener(CancellationToken ct)
-        => Ok(await users.ObtenerAsync(UsuarioId(), ct));
+    {
+        if (!TryGetUsuarioId(out var id)) return SesionInvalida();
+
+        return ARespuesta(await users.ObtenerAsync(id, ct));
+    }
 
     [HttpPut("me")]
     [ProducesResponseType<UsuarioResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Actualizar(ActualizarPerfilRequest request, CancellationToken ct)
-        => Ok(await users.ActualizarAsync(UsuarioId(), request, ct));
+    {
+        if (!TryGetUsuarioId(out var id)) return SesionInvalida();
+
+        return ARespuesta(await users.ActualizarAsync(id, request, ct));
+    }
+
+    private IActionResult ARespuesta(Resultado<UsuarioResponse> resultado) =>
+        resultado.EsExitoso
+            ? Ok(resultado.Valor)
+            : Problem(detail: resultado.Error, statusCode: resultado.StatusCode);
+
+    private IActionResult SesionInvalida() =>
+        Problem(detail: "Sesión no válida", statusCode: StatusCodes.Status401Unauthorized);
 
     // El id sale del token 
-    private Guid UsuarioId()
-    {
-        var valor = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
-        return Guid.TryParse(valor, out var id)
-            ? id
-            : throw new ReglaNegocioException("Sesión no válida", StatusCodes.Status401Unauthorized);
-    }
+    private bool TryGetUsuarioId(out Guid id) =>
+        Guid.TryParse(User.FindFirstValue(JwtRegisteredClaimNames.Sub), out id);
 }
