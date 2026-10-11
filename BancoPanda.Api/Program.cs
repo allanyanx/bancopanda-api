@@ -1,5 +1,4 @@
 using System.Text;
-using BancoPanda.Api.Common;
 using BancoPanda.Api.Data;
 using BancoPanda.Api.Features.Auth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -42,7 +41,6 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<UsersService>();
 
 builder.Services.AddProblemDetails();
-builder.Services.AddExceptionHandler<ManejadorErrores>();
 
 builder.Services.AddCors();
 builder.Services.AddControllers();

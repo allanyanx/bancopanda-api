@@ -18,7 +18,7 @@ bancopanda-api/
     │   ├── Tarjeta.cs
     │   ├── Movimiento.cs
     │   └── Enum.cs                 # TipoCuenta, TipoMovimiento, CategoriaMovimiento...
-    ├── Common/                     # Errores de negocio y su respuesta JSON
+    ├── Common/                     # Resultado<T>: éxito o error de una operación
     ├── Features/                   # Una carpeta por funcionalidad
     │   └── Auth/                   # Registro y login (JWT)
     │       ├── AuthController.cs   # Endpoints
