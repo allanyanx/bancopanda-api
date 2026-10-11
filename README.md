@@ -18,14 +18,18 @@ bancopanda-api/
     │   ├── Tarjeta.cs
     │   ├── Movimiento.cs
     │   └── Enum.cs                 # TipoCuenta, TipoMovimiento, CategoriaMovimiento...
-    ├── Common/                     # Resultado<T>: éxito o error de una operación
+    ├── Common/                     # Resultado<T> y reglas de validación compartidas
     ├── Features/                   # Una carpeta por funcionalidad
-    │   └── Auth/                   # Registro y login (JWT)
-    │       ├── AuthController.cs   # Endpoints
-    │       ├── AuthService.cs      # Reglas de negocio
-    │       ├── AuthDtos.cs         # Datos de entrada y salida
-    │       ├── TokenService.cs     # Generación del token JWT
-    │       └── JwtOptions.cs       # Configuración del token
+    │   ├── Auth/                   # Registro y login (JWT)
+    │   │   ├── AuthController.cs   # Endpoints
+    │   │   ├── AuthService.cs      # Reglas de negocio
+    │   │   ├── AuthDtos.cs         # Datos de entrada y salida
+    │   │   ├── TokenService.cs     # Generación del token JWT
+    │   │   └── JwtOptions.cs       # Configuración del token
+    │   └── Users/                  # Perfil del usuario
+    │       ├── UsersController.cs  # Endpoints (requieren token)
+    │       ├── UsersService.cs     # Reglas de negocio
+    │       └── UsersDtos.cs        # Datos de entrada
     ├── Migrations/                 # Migraciones generadas por EF Core
     ├── Properties/
     │   └── launchSettings.json     # Puertos de ejecución local
@@ -106,6 +110,10 @@ Para comprobar que funciona, abre: http://localhost:5258/openapi/v1.json
 |---|---|---|
 | POST | `/api/auth/registro` | Crea el usuario con su cuenta de ahorros y su tarjeta. Devuelve la sesión iniciada |
 | POST | `/api/auth/login` | Inicia sesión con correo o cédula. Devuelve el token JWT |
+| GET | `/api/usuarios/perfil` | Devuelve los datos del usuario del token |
+| PUT | `/api/usuarios/perfil` | Actualiza los datos. Para cambiar la contraseña exige la contraseña actual |
+
+Los endpoints de `/api/usuarios` requieren el encabezado `Authorization: Bearer <token>`.
 
 Hay peticiones de ejemplo en `BancoPanda.Api/BancoPanda.Api.http` (se ejecutan desde VS Code o Visual Studio).
 

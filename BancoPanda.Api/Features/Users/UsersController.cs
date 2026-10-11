@@ -12,7 +12,7 @@ namespace BancoPanda.Api.Features.Users;
 [Route("api/usuarios")]
 public class UsersController(UsersService users) : ControllerBase
 {
-    [HttpGet("me")]
+    [HttpGet("perfil")]
     [ProducesResponseType<UsuarioResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Obtener(CancellationToken ct)
@@ -22,7 +22,7 @@ public class UsersController(UsersService users) : ControllerBase
         return ARespuesta(await users.ObtenerAsync(id, ct));
     }
 
-    [HttpPut("me")]
+    [HttpPut("perfil")]
     [ProducesResponseType<UsuarioResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Actualizar(ActualizarPerfilRequest request, CancellationToken ct)
@@ -40,7 +40,6 @@ public class UsersController(UsersService users) : ControllerBase
     private IActionResult SesionInvalida() =>
         Problem(detail: "Sesión no válida", statusCode: StatusCodes.Status401Unauthorized);
 
-    // El id sale del token 
     private bool TryGetUsuarioId(out Guid id) =>
         Guid.TryParse(User.FindFirstValue(JwtRegisteredClaimNames.Sub), out id);
 }

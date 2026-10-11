@@ -7,7 +7,6 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace BancoPanda.Api.Features.Auth;
 
-/// <summary>Genera el token JWT que identifica al usuario en las siguientes peticiones.</summary>
 public class TokenService(IOptions<JwtOptions> options)
 {
     private readonly JwtOptions _jwt = options.Value;

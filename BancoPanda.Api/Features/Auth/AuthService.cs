@@ -7,10 +7,6 @@ using Npgsql;
 
 namespace BancoPanda.Api.Features.Auth;
 
-/// <summary>
-/// Reglas de negocio del registro y del inicio de sesión.
-/// Toda la lógica vive aquí: la app móvil solo muestra el resultado.
-/// </summary>
 public class AuthService(AppDbContext db, TokenService tokens)
 {
     private const decimal BonoBienvenida = 100.00m;
@@ -37,8 +33,6 @@ public class AuthService(AppDbContext db, TokenService tokens)
             ContrasenaHash = BCrypt.Net.BCrypt.HashPassword(request.Contrasena)
         };
 
-        // Todo usuario nuevo recibe una cuenta de ahorros, su tarjeta de débito
-        // y un bono de bienvenida registrado como primer movimiento.
         var cuenta = new Cuenta
         {
             NumeroCuenta = await GenerarNumeroCuentaAsync(ct),
@@ -67,12 +61,10 @@ public class AuthService(AppDbContext db, TokenService tokens)
 
         try
         {
-            // Un solo SaveChanges = una sola transacción: se guarda todo o nada.
             await db.SaveChangesAsync(ct);
         }
         catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
         {
-            // Dos registros simultáneos con el mismo correo o cédula: gana el primero.
             return Resultado<AuthResponse>.Fallo("Ya existe una cuenta con esos datos", StatusCodes.Status409Conflict);
         }
 
@@ -88,8 +80,6 @@ public class AuthService(AppDbContext db, TokenService tokens)
             ? await db.Usuarios.SingleOrDefaultAsync(u => u.Correo == correo, ct)
             : await db.Usuarios.SingleOrDefaultAsync(u => u.Cedula == identificador, ct);
 
-        // Mismo mensaje si no existe el usuario o si la contraseña está mal:
-        // así no se revela qué correos o cédulas están registrados.
         if (usuario is null || !BCrypt.Net.BCrypt.Verify(request.Contrasena, usuario.ContrasenaHash))
             return Resultado<AuthResponse>.Fallo(CredencialesIncorrectas, StatusCodes.Status401Unauthorized);
 

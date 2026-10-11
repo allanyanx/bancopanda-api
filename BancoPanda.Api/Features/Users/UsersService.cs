@@ -1,4 +1,4 @@
-﻿using BancoPanda.Api.Common;
+using BancoPanda.Api.Common;
 using BancoPanda.Api.Data;
 using BancoPanda.Api.Entities;
 using BancoPanda.Api.Features.Auth;
@@ -10,13 +10,14 @@ namespace BancoPanda.Api.Features.Users;
 public class UsersService(AppDbContext db)
 {
     private const string CorreoRepetido = "Ya existe una cuenta con ese correo";
+    private const string UsuarioNoEncontrado = "Usuario no encontrado";
 
     public async Task<Resultado<UsuarioResponse>> ObtenerAsync(Guid usuarioId, CancellationToken ct)
     {
         var usuario = await db.Usuarios.FindAsync([usuarioId], ct);
 
         return usuario is null
-            ? Resultado<UsuarioResponse>.Fallo("Usuario no encontrado", StatusCodes.Status404NotFound)
+            ? Resultado<UsuarioResponse>.Fallo(UsuarioNoEncontrado, StatusCodes.Status404NotFound)
             : Resultado<UsuarioResponse>.Ok(ToResponse(usuario));
     }
 
@@ -25,20 +26,28 @@ public class UsersService(AppDbContext db)
     {
         var usuario = await db.Usuarios.FindAsync([usuarioId], ct);
         if (usuario is null)
-            return Resultado<UsuarioResponse>.Fallo("Usuario no encontrado", StatusCodes.Status404NotFound);
+            return Resultado<UsuarioResponse>.Fallo(UsuarioNoEncontrado, StatusCodes.Status404NotFound);
 
         var correo = request.Correo.Trim().ToLowerInvariant();
 
         if (await db.Usuarios.AnyAsync(u => u.Correo == correo && u.UsuarioId != usuarioId, ct))
             return Resultado<UsuarioResponse>.Fallo(CorreoRepetido, StatusCodes.Status409Conflict);
 
+        if (!string.IsNullOrEmpty(request.ContrasenaNueva))
+        {
+            if (string.IsNullOrEmpty(request.ContrasenaActual))
+                return Resultado<UsuarioResponse>.Fallo("Ingresa tu contraseña actual para cambiarla");
+
+            if (!BCrypt.Net.BCrypt.Verify(request.ContrasenaActual, usuario.ContrasenaHash))
+                return Resultado<UsuarioResponse>.Fallo("La contraseña actual es incorrecta");
+
+            usuario.ContrasenaHash = BCrypt.Net.BCrypt.HashPassword(request.ContrasenaNueva);
+        }
+
         usuario.Nombres = request.Nombres.Trim();
         usuario.Apellidos = request.Apellidos.Trim();
         usuario.Correo = correo;
         usuario.Telefono = request.Telefono.Trim();
-
-        if (!string.IsNullOrEmpty(request.ContrasenaNueva))
-            usuario.ContrasenaHash = BCrypt.Net.BCrypt.HashPassword(request.ContrasenaNueva);
 
         try
         {
