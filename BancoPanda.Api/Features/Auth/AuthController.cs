@@ -13,8 +13,12 @@ public class AuthController(AuthService auth) : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Registrar(RegistroRequest request, CancellationToken ct)
     {
-        var respuesta = await auth.RegistrarAsync(request, ct);
-        return StatusCode(StatusCodes.Status201Created, respuesta);
+        var resultado = await auth.RegistrarAsync(request, ct);
+
+        // Problem() responde en formato ProblemDetails: la app lee el mensaje en "detail".
+        return resultado.EsExitoso
+            ? StatusCode(StatusCodes.Status201Created, resultado.Valor)
+            : Problem(detail: resultado.Error, statusCode: resultado.StatusCode);
     }
 
     /// <summary>Inicia sesión con correo o cédula.</summary>
@@ -23,7 +27,10 @@ public class AuthController(AuthService auth) : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> IniciarSesion(LoginRequest request, CancellationToken ct)
     {
-        var respuesta = await auth.IniciarSesionAsync(request, ct);
-        return Ok(respuesta);
+        var resultado = await auth.IniciarSesionAsync(request, ct);
+
+        return resultado.EsExitoso
+            ? Ok(resultado.Valor)
+            : Problem(detail: resultado.Error, statusCode: resultado.StatusCode);
     }
 }

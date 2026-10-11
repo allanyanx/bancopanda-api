@@ -16,16 +16,16 @@ public class AuthService(AppDbContext db, TokenService tokens)
     private const decimal BonoBienvenida = 100.00m;
     private const string CredencialesIncorrectas = "Correo, cédula o contraseña incorrectos";
 
-    public async Task<AuthResponse> RegistrarAsync(RegistroRequest request, CancellationToken ct)
+    public async Task<Resultado<AuthResponse>> RegistrarAsync(RegistroRequest request, CancellationToken ct)
     {
         var correo = request.Correo.Trim().ToLowerInvariant();
         var cedula = request.Cedula.Trim();
 
         if (await db.Usuarios.AnyAsync(u => u.Correo == correo, ct))
-            throw new ReglaNegocioException("Ya existe una cuenta con ese correo", StatusCodes.Status409Conflict);
+            return Resultado<AuthResponse>.Fallo("Ya existe una cuenta con ese correo", StatusCodes.Status409Conflict);
 
         if (await db.Usuarios.AnyAsync(u => u.Cedula == cedula, ct))
-            throw new ReglaNegocioException("Ya existe una cuenta con esa cédula", StatusCodes.Status409Conflict);
+            return Resultado<AuthResponse>.Fallo("Ya existe una cuenta con esa cédula", StatusCodes.Status409Conflict);
 
         var usuario = new Usuario
         {
@@ -73,13 +73,13 @@ public class AuthService(AppDbContext db, TokenService tokens)
         catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
         {
             // Dos registros simultáneos con el mismo correo o cédula: gana el primero.
-            throw new ReglaNegocioException("Ya existe una cuenta con esos datos", StatusCodes.Status409Conflict);
+            return Resultado<AuthResponse>.Fallo("Ya existe una cuenta con esos datos", StatusCodes.Status409Conflict);
         }
 
         return CrearRespuesta(usuario);
     }
 
-    public async Task<AuthResponse> IniciarSesionAsync(LoginRequest request, CancellationToken ct)
+    public async Task<Resultado<AuthResponse>> IniciarSesionAsync(LoginRequest request, CancellationToken ct)
     {
         var identificador = request.Identificador.Trim();
         var correo = identificador.ToLowerInvariant();
@@ -91,22 +91,22 @@ public class AuthService(AppDbContext db, TokenService tokens)
         // Mismo mensaje si no existe el usuario o si la contraseña está mal:
         // así no se revela qué correos o cédulas están registrados.
         if (usuario is null || !BCrypt.Net.BCrypt.Verify(request.Contrasena, usuario.ContrasenaHash))
-            throw new ReglaNegocioException(CredencialesIncorrectas, StatusCodes.Status401Unauthorized);
+            return Resultado<AuthResponse>.Fallo(CredencialesIncorrectas, StatusCodes.Status401Unauthorized);
 
         return CrearRespuesta(usuario);
     }
 
-    private AuthResponse CrearRespuesta(Usuario usuario)
+    private Resultado<AuthResponse> CrearRespuesta(Usuario usuario)
     {
         var (token, expiraEn) = tokens.CrearToken(usuario);
 
-        return new AuthResponse(token, expiraEn, new UsuarioResponse(
+        return Resultado<AuthResponse>.Ok(new AuthResponse(token, expiraEn, new UsuarioResponse(
             usuario.UsuarioId,
             usuario.Nombres,
             usuario.Apellidos,
             usuario.Cedula,
             usuario.Correo,
-            usuario.Telefono));
+            usuario.Telefono)));
     }
 
     private async Task<string> GenerarNumeroCuentaAsync(CancellationToken ct)
