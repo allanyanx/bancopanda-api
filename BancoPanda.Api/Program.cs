@@ -18,8 +18,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddOptions<JwtOptions>()
     .BindConfiguration(JwtOptions.Seccion)
-    .Validate(jwt => jwt.Clave.Length >= 32,
-        "Falta la clave del token. Ejecuta: dotnet user-secrets set \"Jwt:Clave\" \"<mínimo 32 caracteres>\"")
+    .Validate(jwt => jwt.Clave.Length >= 32)
     .ValidateOnStart();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
