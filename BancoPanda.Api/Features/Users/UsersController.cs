@@ -1,5 +1,3 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using BancoPanda.Api.Common;
 using BancoPanda.Api.Features.Auth;
 using Microsoft.AspNetCore.Authorization;
@@ -10,7 +8,7 @@ namespace BancoPanda.Api.Features.Users;
 [ApiController]
 [Authorize]
 [Route("api/usuarios")]
-public class UsersController(UsersService users) : ControllerBase
+public class UsersController(UsersService users) : ApiControllerBase
 {
     [HttpGet("perfil")]
     [ProducesResponseType<UsuarioResponse>(StatusCodes.Status200OK)]
@@ -31,15 +29,4 @@ public class UsersController(UsersService users) : ControllerBase
 
         return ARespuesta(await users.ActualizarAsync(id, request, ct));
     }
-
-    private IActionResult ARespuesta(Resultado<UsuarioResponse> resultado) =>
-        resultado.EsExitoso
-            ? Ok(resultado.Valor)
-            : Problem(detail: resultado.Error, statusCode: resultado.StatusCode);
-
-    private IActionResult SesionInvalida() =>
-        Problem(detail: "Sesión no válida", statusCode: StatusCodes.Status401Unauthorized);
-
-    private bool TryGetUsuarioId(out Guid id) =>
-        Guid.TryParse(User.FindFirstValue(JwtRegisteredClaimNames.Sub), out id);
 }

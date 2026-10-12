@@ -64,5 +64,9 @@ Content-Type: application/json
   "contrasenaNueva": "Panda2027"
 }
 
+### Resumen del dashboard: cuenta, tarjetas y últimos movimientos
+GET {{BancoPanda.Api_HostAddress}}/api/cuentas/resumen
+Authorization: Bearer {{token}}
+
 ### Sin token: debe responder 401
 GET {{BancoPanda.Api_HostAddress}}/api/usuarios/perfil

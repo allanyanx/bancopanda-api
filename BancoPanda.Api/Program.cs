@@ -1,5 +1,8 @@
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using BancoPanda.Api.Data;
+using BancoPanda.Api.Features.Accounts;
 using BancoPanda.Api.Features.Auth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -38,11 +41,16 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<UsersService>();
+builder.Services.AddScoped<AccountsService>();
 
 builder.Services.AddProblemDetails();
 
 builder.Services.AddCors();
-builder.Services.AddControllers();
+var enumsComoTexto = new JsonStringEnumConverter(JsonNamingPolicy.CamelCase);
+
+builder.Services.AddControllers()
+    .AddJsonOptions(json => json.JsonSerializerOptions.Converters.Add(enumsComoTexto));
+builder.Services.ConfigureHttpJsonOptions(json => json.SerializerOptions.Converters.Add(enumsComoTexto));
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
