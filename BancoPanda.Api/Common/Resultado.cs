@@ -1,10 +1,5 @@
 namespace BancoPanda.Api.Common;
 
-/// <summary>
-/// Resultado de una operación de negocio: trae el valor si salió bien, o el
-/// mensaje de error y el código HTTP si no. Se usa en lugar de excepciones
-/// para los casos esperados (credenciales incorrectas, correo repetido...).
-/// </summary>
 public class Resultado<T>
 {
     private Resultado(T? valor, string? error, int statusCode)

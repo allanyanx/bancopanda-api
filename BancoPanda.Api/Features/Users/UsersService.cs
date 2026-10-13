@@ -32,13 +32,21 @@ public class UsersService(AppDbContext db)
         if (await db.Usuarios.AnyAsync(u => u.Correo == correo && u.UsuarioId != usuarioId, ct))
             return Resultado<UsuarioResponse>.Fallo(CorreoRepetido, StatusCodes.Status409Conflict);
 
+        if (!string.IsNullOrEmpty(request.ContrasenaNueva))
+        {
+            if (string.IsNullOrEmpty(request.ContrasenaActual))
+                return Resultado<UsuarioResponse>.Fallo("Ingresa tu contraseña actual para cambiarla");
+
+            if (!BCrypt.Net.BCrypt.Verify(request.ContrasenaActual, usuario.ContrasenaHash))
+                return Resultado<UsuarioResponse>.Fallo("La contraseña actual es incorrecta");
+
+            usuario.ContrasenaHash = BCrypt.Net.BCrypt.HashPassword(request.ContrasenaNueva);
+        }
+
         usuario.Nombres = request.Nombres.Trim();
         usuario.Apellidos = request.Apellidos.Trim();
         usuario.Correo = correo;
         usuario.Telefono = request.Telefono.Trim();
-
-        if (!string.IsNullOrEmpty(request.ContrasenaNueva))
-            usuario.ContrasenaHash = BCrypt.Net.BCrypt.HashPassword(request.ContrasenaNueva);
 
         try
         {

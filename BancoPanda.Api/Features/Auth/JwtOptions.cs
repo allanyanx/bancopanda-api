@@ -1,6 +1,5 @@
 namespace BancoPanda.Api.Features.Auth;
 
-/// <summary>Configuración del token. La clave se guarda en User Secrets, nunca en el repositorio.</summary>
 public class JwtOptions
 {
     public const string Seccion = "Jwt";

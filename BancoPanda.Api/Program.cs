@@ -13,7 +13,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default"))
            .UseSnakeCaseNamingConvention());
 
-// JWT: la clave viene de User Secrets y se valida al arrancar la API.
 builder.Services.AddOptions<JwtOptions>()
     .BindConfiguration(JwtOptions.Seccion)
     .Validate(jwt => jwt.Clave.Length >= 32,
@@ -25,7 +24,7 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
     .Configure<IOptions<JwtOptions>>((bearer, jwtOptions) =>
     {
         var jwt = jwtOptions.Value;
-        bearer.MapInboundClaims = false; // Conserva los nombres originales de los claims ("sub", "email")
+        bearer.MapInboundClaims = false;
         bearer.TokenValidationParameters = new TokenValidationParameters
         {
             ValidIssuer = jwt.Emisor,
@@ -54,8 +53,6 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 
-    // Solo en desarrollo: permite probar la app desde el navegador (flutter run -d chrome).
-    // La app Android no necesita CORS.
     app.UseCors(policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 }
 

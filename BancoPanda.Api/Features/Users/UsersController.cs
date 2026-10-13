@@ -40,7 +40,6 @@ public class UsersController(UsersService users) : ControllerBase
     private IActionResult SesionInvalida() =>
         Problem(detail: "Sesión no válida", statusCode: StatusCodes.Status401Unauthorized);
 
-    // El id sale del token 
     private bool TryGetUsuarioId(out Guid id) =>
         Guid.TryParse(User.FindFirstValue(JwtRegisteredClaimNames.Sub), out id);
 }
