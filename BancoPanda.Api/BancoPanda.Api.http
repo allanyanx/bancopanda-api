@@ -67,3 +67,29 @@ Content-Type: application/json
 
 ### Sin token: debe responder 401
 GET {{BancoPanda.Api_HostAddress}}/api/usuarios/me
+
+### Mis cuentas con su saldo
+GET {{BancoPanda.Api_HostAddress}}/api/cuentas
+Authorization: Bearer {{token}}
+
+### Mis tarjetas
+# @name tarjetas
+GET {{BancoPanda.Api_HostAddress}}/api/tarjetas
+Authorization: Bearer {{token}}
+
+### Últimos movimientos de todas mis cuentas
+GET {{BancoPanda.Api_HostAddress}}/api/movimientos?limite=5
+Authorization: Bearer {{token}}
+
+### Movimientos de mi primera tarjeta (ejecuta antes "Mis tarjetas")
+@tarjetaId = {{tarjetas.response.body.$[0].tarjetaId}}
+GET {{BancoPanda.Api_HostAddress}}/api/tarjetas/{{tarjetaId}}/movimientos?limite=10
+Authorization: Bearer {{token}}
+
+### Tarjeta que no es mía o no existe: debe responder 404
+GET {{BancoPanda.Api_HostAddress}}/api/tarjetas/00000000-0000-0000-0000-000000000000/movimientos
+Authorization: Bearer {{token}}
+
+### Límite fuera de rango: debe responder 400
+GET {{BancoPanda.Api_HostAddress}}/api/movimientos?limite=0
+Authorization: Bearer {{token}}

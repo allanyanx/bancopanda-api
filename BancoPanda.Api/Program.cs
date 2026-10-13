@@ -1,6 +1,10 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using BancoPanda.Api.Data;
+using BancoPanda.Api.Features.Accounts;
 using BancoPanda.Api.Features.Auth;
+using BancoPanda.Api.Features.Cards;
+using BancoPanda.Api.Features.Movements;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -38,11 +42,16 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<UsersService>();
+builder.Services.AddScoped<AccountsService>();
+builder.Services.AddScoped<CardsService>();
+builder.Services.AddScoped<MovementsService>();
 
 builder.Services.AddProblemDetails();
 
 builder.Services.AddCors();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(json => json.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+builder.Services.ConfigureHttpJsonOptions(json => json.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddOpenApi();
 
 var app = builder.Build();

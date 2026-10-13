@@ -9,6 +9,8 @@ Organizado por funcionalidad (*feature-first*):
 ```
 bancopanda-api/
 ├── BancoPanda.slnx                 # Solución
+├── Database/
+│   └── seed.sql                    # Datos de prueba (usuarios, cuentas, tarjetas y movimientos)
 └── BancoPanda.Api/
     ├── Data/
     │   └── AppDbContext.cs         # Conexión con PostgreSQL (EF Core)
@@ -18,14 +20,18 @@ bancopanda-api/
     │   ├── Tarjeta.cs
     │   ├── Movimiento.cs
     │   └── Enum.cs                 # TipoCuenta, TipoMovimiento, CategoriaMovimiento...
-    ├── Common/                     # Resultado<T>: éxito o error de una operación
+    ├── Common/                     # Resultado<T> (éxito o error) y ApiControllerBase (usuario del token)
     ├── Features/                   # Una carpeta por funcionalidad
-    │   └── Auth/                   # Registro y login (JWT)
-    │       ├── AuthController.cs   # Endpoints
-    │       ├── AuthService.cs      # Reglas de negocio
-    │       ├── AuthDtos.cs         # Datos de entrada y salida
-    │       ├── TokenService.cs     # Generación del token JWT
-    │       └── JwtOptions.cs       # Configuración del token
+    │   ├── Auth/                   # Registro y login (JWT)
+    │   │   ├── AuthController.cs   # Endpoints
+    │   │   ├── AuthService.cs      # Reglas de negocio
+    │   │   ├── AuthDtos.cs         # Datos de entrada y salida
+    │   │   ├── TokenService.cs     # Generación del token JWT
+    │   │   └── JwtOptions.cs       # Configuración del token
+    │   ├── Users/                  # Perfil del usuario
+    │   ├── Accounts/               # Cuentas y saldos
+    │   ├── Cards/                  # Tarjetas y sus movimientos
+    │   └── Movements/              # Movimientos recientes
     ├── Migrations/                 # Migraciones generadas por EF Core
     ├── Properties/
     │   └── launchSettings.json     # Puertos de ejecución local
@@ -100,12 +106,41 @@ Para comprobar que funciona, abre: http://localhost:5258/openapi/v1.json
 
 > 📱 Desde el emulador de Android la API se llama con **http://10.0.2.2:5258**
 
+## 6. Cargar datos de prueba (opcional)
+
+Un usuario recién registrado solo tiene su bono de bienvenida. Para ver el dashboard con varias cuentas, tarjetas y movimientos, ejecuta el script desde la raíz del repositorio:
+
+```bash
+psql -U bancopanda_user -d bancopanda -f Database/seed.sql
+```
+
+También puedes abrir `Database/seed.sql` en pgAdmin o DBeaver y ejecutarlo completo.
+
+Crea dos usuarios (contraseña de ambos: `Panda2026`):
+
+| Correo | Cédula | Datos |
+|---|---|---|
+| `andrea.barroso@bancopanda.test` | `0912345678` | 2 cuentas, 2 tarjetas, 26 movimientos |
+| `carlos.mendoza@bancopanda.test` | `0923456781` | 1 cuenta, 2 tarjetas (una inactiva), 8 movimientos |
+
+Se puede ejecutar las veces que haga falta: borra lo que sembró antes y lo vuelve a crear con fechas recientes. No modifica a los usuarios registrados desde la app.
+
 ## Endpoints
+
+Todos, excepto los de `auth`, piden el token en la cabecera `Authorization: Bearer <token>` y solo devuelven datos del usuario del token.
 
 | Método | Ruta | Descripción |
 |---|---|---|
 | POST | `/api/auth/registro` | Crea el usuario con su cuenta de ahorros y su tarjeta. Devuelve la sesión iniciada |
 | POST | `/api/auth/login` | Inicia sesión con correo o cédula. Devuelve el token JWT |
+| GET | `/api/usuarios/me` | Datos del usuario |
+| PUT | `/api/usuarios/me` | Actualiza los datos del usuario y, opcionalmente, su contraseña |
+| GET | `/api/cuentas` | Cuentas del usuario con su saldo |
+| GET | `/api/tarjetas` | Tarjetas del usuario con el saldo de la cuenta a la que pertenecen |
+| GET | `/api/tarjetas/{tarjetaId}/movimientos?limite=20` | Movimientos de la cuenta de esa tarjeta, del más reciente al más antiguo. `404` si la tarjeta no es del usuario |
+| GET | `/api/movimientos?limite=20` | Últimos movimientos de todas las cuentas del usuario |
+
+`limite` es opcional: por defecto 20, mínimo 1 y máximo 50.
 
 Hay peticiones de ejemplo en `BancoPanda.Api/BancoPanda.Api.http` (se ejecutan desde VS Code o Visual Studio).
 
@@ -115,7 +150,9 @@ Los errores se devuelven en formato *ProblemDetails*: el mensaje va en `detail` 
 
 - Las llaves primarias llevan el nombre de la entidad (`UsuarioId`, `CuentaId`...), nunca solo `Id`.
 - Los campos se llaman igual en la base de datos (`usuario_id`), en el backend (`UsuarioId`) y en el JSON que recibe la app (`usuarioId`).
-- La base de datos solo se modifica con migraciones de EF Core; no hay scripts SQL sueltos ni triggers.
+- La estructura de la base de datos solo se modifica con migraciones de EF Core; no hay triggers. El único script SQL es `Database/seed.sql`, que solo inserta datos de prueba.
+- Los enums viajan como texto en el JSON (`"Egreso"`, `"Comida"`, `"Visa"`), igual que se guardan en la base de datos.
+- Los montos de los movimientos son siempre positivos; `tipo` (`Ingreso` o `Egreso`) indica si suman o restan.
 
 ## Problemas comunes
 
