@@ -10,12 +10,16 @@ namespace BancoPanda.Api.Features.Auth;
 public class AuthService(AppDbContext db, TokenService tokens)
 {
     private const decimal BonoBienvenida = 100.00m;
-    private const string CredencialesIncorrectas = "Correo, cédula o contraseña incorrectos";
+    private const string CredencialesIncorrectas = "Usuario o contraseña incorrectos";
 
     public async Task<Resultado<AuthResponse>> RegistrarAsync(RegistroRequest request, CancellationToken ct)
     {
+        var nombreUsuario = request.NombreUsuario.Trim().ToLowerInvariant();
         var correo = request.Correo.Trim().ToLowerInvariant();
         var cedula = request.Cedula.Trim();
+
+        if (await db.Usuarios.AnyAsync(u => u.NombreUsuario == nombreUsuario, ct))
+            return Resultado<AuthResponse>.Fallo("Ese nombre de usuario ya está en uso", StatusCodes.Status409Conflict);
 
         if (await db.Usuarios.AnyAsync(u => u.Correo == correo, ct))
             return Resultado<AuthResponse>.Fallo("Ya existe una cuenta con ese correo", StatusCodes.Status409Conflict);
@@ -25,6 +29,7 @@ public class AuthService(AppDbContext db, TokenService tokens)
 
         var usuario = new Usuario
         {
+            NombreUsuario = nombreUsuario,
             Nombres = request.Nombres.Trim(),
             Apellidos = request.Apellidos.Trim(),
             Cedula = cedula,
@@ -73,12 +78,9 @@ public class AuthService(AppDbContext db, TokenService tokens)
 
     public async Task<Resultado<AuthResponse>> IniciarSesionAsync(LoginRequest request, CancellationToken ct)
     {
-        var identificador = request.Identificador.Trim();
-        var correo = identificador.ToLowerInvariant();
+        var nombreUsuario = request.NombreUsuario.Trim().ToLowerInvariant();
 
-        var usuario = identificador.Contains('@')
-            ? await db.Usuarios.SingleOrDefaultAsync(u => u.Correo == correo, ct)
-            : await db.Usuarios.SingleOrDefaultAsync(u => u.Cedula == identificador, ct);
+        var usuario = await db.Usuarios.SingleOrDefaultAsync(u => u.NombreUsuario == nombreUsuario, ct);
 
         if (usuario is null || !BCrypt.Net.BCrypt.Verify(request.Contrasena, usuario.ContrasenaHash))
             return Resultado<AuthResponse>.Fallo(CredencialesIncorrectas, StatusCodes.Status401Unauthorized);
@@ -92,6 +94,7 @@ public class AuthService(AppDbContext db, TokenService tokens)
 
         return Resultado<AuthResponse>.Ok(new AuthResponse(token, expiraEn, new UsuarioResponse(
             usuario.UsuarioId,
+            usuario.NombreUsuario,
             usuario.Nombres,
             usuario.Apellidos,
             usuario.Cedula,

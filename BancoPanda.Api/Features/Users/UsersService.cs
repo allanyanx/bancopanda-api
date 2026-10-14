@@ -61,5 +61,5 @@ public class UsersService(AppDbContext db)
     }
 
     private static UsuarioResponse ToResponse(Usuario u) =>
-        new(u.UsuarioId, u.Nombres, u.Apellidos, u.Cedula, u.Correo, u.Telefono);
+        new(u.UsuarioId, u.NombreUsuario, u.Nombres, u.Apellidos, u.Cedula, u.Correo, u.Telefono);
 }

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using BancoPanda.Api.Common;
 
 namespace BancoPanda.Api.Features.Users;
@@ -16,12 +16,12 @@ public class ActualizarPerfilRequest
     public string Apellidos { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "El correo es obligatorio")]
-    [EmailAddress(ErrorMessage = "El correo no es válido")]
     [StringLength(150, ErrorMessage = "El correo no puede superar los 150 caracteres")]
+    [RegularExpression(ReglasValidacion.Correo, ErrorMessage = ReglasValidacion.MensajeCorreo)]
     public string Correo { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "El teléfono es obligatorio")]
-    [RegularExpression(@"^09\d{8}$", ErrorMessage = "El teléfono debe tener 10 dígitos y empezar con 09")]
+    [Required(ErrorMessage = "El celular es obligatorio")]
+    [RegularExpression(ReglasValidacion.Celular, ErrorMessage = ReglasValidacion.MensajeCelular)]
     public string Telefono { get; set; } = string.Empty;
 
     public string? ContrasenaActual { get; set; }

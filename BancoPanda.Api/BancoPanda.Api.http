@@ -5,36 +5,27 @@ POST {{BancoPanda.Api_HostAddress}}/api/auth/registro
 Content-Type: application/json
 
 {
+  "nombreUsuario": "andrea.barroso",
   "cedula": "1234567890",
   "nombres": "Andrea",
   "apellidos": "Barroso Torres",
   "correo": "prueba@bancopanda.test",
-  "telefono": "0987654321",
+  "telefono": "+593987654321",
   "contrasena": "Panda2026",
   "aceptaTerminos": true
 }
 
-### Login con correo
+### Login con nombre de usuario
 # @name login
 POST {{BancoPanda.Api_HostAddress}}/api/auth/login
 Content-Type: application/json
 
 {
-  "identificador": "prueba@bancopanda.test",
+  "nombreUsuario": "andrea.barroso",
   "contrasena": "Panda2026"
 }
 
-
-### Login con cédula
-POST {{BancoPanda.Api_HostAddress}}/api/auth/login
-Content-Type: application/json
-
-{
-  "identificador": "1234567890",
-  "contrasena": "Panda2026"
-}
-
-### Ver mi perfil (ejecuta antes "Login con correo")
+### Ver mi perfil (ejecuta antes "Login con nombre de usuario")
 @token = {{login.response.body.$.token}}
 GET {{BancoPanda.Api_HostAddress}}/api/usuarios/me
 Authorization: Bearer {{token}}
@@ -48,7 +39,7 @@ Content-Type: application/json
   "nombres": "Andrea Melina",
   "apellidos": "Barroso Torres",
   "correo": "prueba@bancopanda.test",
-  "telefono": "0987654321"
+  "telefono": "+593987654321"
 }
 
 ### Cambiar mi contraseña
@@ -60,7 +51,7 @@ Content-Type: application/json
   "nombres": "Andrea",
   "apellidos": "Barroso Torres",
   "correo": "prueba@bancopanda.test",
-  "telefono": "0987654321",
+  "telefono": "+593987654321",
   "contrasenaActual": "Panda2026",
   "contrasenaNueva": "Panda2027"
 }

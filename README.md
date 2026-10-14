@@ -132,7 +132,7 @@ Todos, excepto los de `auth`, piden el token en la cabecera `Authorization: Bear
 | Método | Ruta | Descripción |
 |---|---|---|
 | POST | `/api/auth/registro` | Crea el usuario con su cuenta de ahorros y su tarjeta. Devuelve la sesión iniciada |
-| POST | `/api/auth/login` | Inicia sesión con correo o cédula. Devuelve el token JWT |
+| POST | `/api/auth/login` | Inicia sesión con el nombre de usuario. Devuelve el token JWT |
 | GET | `/api/usuarios/me` | Datos del usuario |
 | PUT | `/api/usuarios/me` | Actualiza los datos del usuario y, opcionalmente, su contraseña |
 | GET | `/api/cuentas` | Cuentas del usuario con su saldo |

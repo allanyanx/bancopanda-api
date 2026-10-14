@@ -5,6 +5,10 @@ namespace BancoPanda.Api.Features.Auth;
 
 public class RegistroRequest
 {
+    [Required(ErrorMessage = "El nombre de usuario es obligatorio")]
+    [RegularExpression(ReglasValidacion.NombreUsuario, ErrorMessage = ReglasValidacion.MensajeNombreUsuario)]
+    public string NombreUsuario { get; set; } = string.Empty;
+
     [Required(ErrorMessage = "La cédula es obligatoria")]
     [RegularExpression(@"^\d{10}$", ErrorMessage = "La cédula debe tener 10 dígitos")]
     public string Cedula { get; set; } = string.Empty;
@@ -20,12 +24,12 @@ public class RegistroRequest
     public string Apellidos { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "El correo es obligatorio")]
-    [EmailAddress(ErrorMessage = "El correo no es válido")]
     [StringLength(150, ErrorMessage = "El correo no puede superar los 150 caracteres")]
+    [RegularExpression(ReglasValidacion.Correo, ErrorMessage = ReglasValidacion.MensajeCorreo)]
     public string Correo { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "El teléfono es obligatorio")]
-    [RegularExpression(@"^09\d{8}$", ErrorMessage = "El teléfono debe tener 10 dígitos y empezar con 09")]
+    [Required(ErrorMessage = "El celular es obligatorio")]
+    [RegularExpression(ReglasValidacion.Celular, ErrorMessage = ReglasValidacion.MensajeCelular)]
     public string Telefono { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "La contraseña es obligatoria")]
@@ -39,8 +43,8 @@ public class RegistroRequest
 
 public class LoginRequest
 {
-    [Required(ErrorMessage = "Ingresa tu correo o cédula")]
-    public string Identificador { get; set; } = string.Empty;
+    [Required(ErrorMessage = "Ingresa tu nombre de usuario")]
+    public string NombreUsuario { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Ingresa tu contraseña")]
     public string Contrasena { get; set; } = string.Empty;
@@ -48,6 +52,7 @@ public class LoginRequest
 
 public record UsuarioResponse(
     Guid UsuarioId,
+    string NombreUsuario,
     string Nombres,
     string Apellidos,
     string Cedula,

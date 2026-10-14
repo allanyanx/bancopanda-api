@@ -201,6 +201,12 @@ namespace BancoPanda.Api.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("fecha_registro");
 
+                    b.Property<string>("NombreUsuario")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("nombre_usuario");
+
                     b.Property<string>("Nombres")
                         .IsRequired()
                         .HasMaxLength(60)
@@ -222,6 +228,10 @@ namespace BancoPanda.Api.Migrations
                     b.HasIndex("Correo")
                         .IsUnique()
                         .HasDatabaseName("ix_usuarios_correo");
+
+                    b.HasIndex("NombreUsuario")
+                        .IsUnique()
+                        .HasDatabaseName("ix_usuarios_nombre_usuario");
 
                     b.ToTable("usuarios", (string)null);
                 });
