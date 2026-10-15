@@ -1,8 +1,9 @@
-﻿namespace BancoPanda.Api.Entities;
+namespace BancoPanda.Api.Entities;
 
 public class Usuario
 {
-    public Guid Id { get; set; }
+    public Guid UsuarioId { get; set; }
+    public string NombreUsuario { get; set; } = string.Empty;
     public string Nombres { get; set; } = string.Empty;
     public string Apellidos { get; set; } = string.Empty;
     public string Cedula { get; set; } = string.Empty;

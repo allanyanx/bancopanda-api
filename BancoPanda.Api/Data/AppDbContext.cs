@@ -14,6 +14,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     {
         modelBuilder.Entity<Usuario>(e =>
         {
+            e.Property(u => u.NombreUsuario).HasMaxLength(20).IsRequired();
             e.Property(u => u.Nombres).HasMaxLength(60).IsRequired();
             e.Property(u => u.Apellidos).HasMaxLength(60).IsRequired();
             e.Property(u => u.Cedula).HasMaxLength(10).IsRequired();
@@ -21,6 +22,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(u => u.Telefono).HasMaxLength(15);
             e.Property(u => u.ContrasenaHash).IsRequired();
 
+            e.HasIndex(u => u.NombreUsuario).IsUnique();
             e.HasIndex(u => u.Correo).IsUnique();
             e.HasIndex(u => u.Cedula).IsUnique();
         });

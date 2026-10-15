@@ -2,7 +2,7 @@
 
 public class Tarjeta
 {
-    public Guid Id { get; set; }
+    public Guid TarjetaId { get; set; }
     public string UltimosDigitos { get; set; } = string.Empty;   
     public MarcaTarjeta Marca { get; set; }
     public TipoTarjeta Tipo { get; set; }
