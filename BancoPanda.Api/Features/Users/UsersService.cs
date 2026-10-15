@@ -9,14 +9,14 @@ namespace BancoPanda.Api.Features.Users;
 
 public class UsersService(AppDbContext db)
 {
-    private const string CorreoRepetido = "Ya existe una cuenta con ese correo";
+    private const string NoEncontrado = "Usuario no encontrado";
 
     public async Task<Resultado<UsuarioResponse>> ObtenerAsync(Guid usuarioId, CancellationToken ct)
     {
         var usuario = await db.Usuarios.FindAsync([usuarioId], ct);
 
         return usuario is null
-            ? Resultado<UsuarioResponse>.Fallo("Usuario no encontrado", StatusCodes.Status404NotFound)
+            ? Resultado<UsuarioResponse>.Fallo(NoEncontrado, StatusCodes.Status404NotFound)
             : Resultado<UsuarioResponse>.Ok(ToResponse(usuario));
     }
 
@@ -25,24 +25,18 @@ public class UsersService(AppDbContext db)
     {
         var usuario = await db.Usuarios.FindAsync([usuarioId], ct);
         if (usuario is null)
-            return Resultado<UsuarioResponse>.Fallo("Usuario no encontrado", StatusCodes.Status404NotFound);
+            return Resultado<UsuarioResponse>.Fallo(NoEncontrado, StatusCodes.Status404NotFound);
 
+        var nombreUsuario = request.NombreUsuario.Trim().ToLowerInvariant();
         var correo = request.Correo.Trim().ToLowerInvariant();
 
+        if (await db.Usuarios.AnyAsync(u => u.NombreUsuario == nombreUsuario && u.UsuarioId != usuarioId, ct))
+            return Resultado<UsuarioResponse>.Fallo("Ese nombre de usuario ya está en uso", StatusCodes.Status409Conflict);
+
         if (await db.Usuarios.AnyAsync(u => u.Correo == correo && u.UsuarioId != usuarioId, ct))
-            return Resultado<UsuarioResponse>.Fallo(CorreoRepetido, StatusCodes.Status409Conflict);
+            return Resultado<UsuarioResponse>.Fallo("Ya existe una cuenta con ese correo", StatusCodes.Status409Conflict);
 
-        if (!string.IsNullOrEmpty(request.ContrasenaNueva))
-        {
-            if (string.IsNullOrEmpty(request.ContrasenaActual))
-                return Resultado<UsuarioResponse>.Fallo("Ingresa tu contraseña actual para cambiarla");
-
-            if (!BCrypt.Net.BCrypt.Verify(request.ContrasenaActual, usuario.ContrasenaHash))
-                return Resultado<UsuarioResponse>.Fallo("La contraseña actual es incorrecta");
-
-            usuario.ContrasenaHash = BCrypt.Net.BCrypt.HashPassword(request.ContrasenaNueva);
-        }
-
+        usuario.NombreUsuario = nombreUsuario;
         usuario.Nombres = request.Nombres.Trim();
         usuario.Apellidos = request.Apellidos.Trim();
         usuario.Correo = correo;
@@ -54,10 +48,30 @@ public class UsersService(AppDbContext db)
         }
         catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
         {
-            return Resultado<UsuarioResponse>.Fallo(CorreoRepetido, StatusCodes.Status409Conflict);
+            return Resultado<UsuarioResponse>.Fallo("Ya existe una cuenta con esos datos", StatusCodes.Status409Conflict);
         }
 
         return Resultado<UsuarioResponse>.Ok(ToResponse(usuario));
+    }
+
+    public async Task<Resultado<bool>> CambiarContrasenaAsync(
+        Guid usuarioId, CambiarContrasenaRequest request, CancellationToken ct)
+    {
+        var usuario = await db.Usuarios.FindAsync([usuarioId], ct);
+        if (usuario is null)
+            return Resultado<bool>.Fallo(NoEncontrado, StatusCodes.Status404NotFound);
+
+        // 400 y no 401: la app cierra la sesión ante un 401 y aquí el token es válido.
+        if (!BCrypt.Net.BCrypt.Verify(request.ContrasenaActual, usuario.ContrasenaHash))
+            return Resultado<bool>.Fallo("La contraseña actual es incorrecta");
+
+        if (request.ContrasenaActual == request.ContrasenaNueva)
+            return Resultado<bool>.Fallo("La contraseña nueva debe ser distinta a la actual");
+
+        usuario.ContrasenaHash = BCrypt.Net.BCrypt.HashPassword(request.ContrasenaNueva);
+        await db.SaveChangesAsync(ct);
+
+        return Resultado<bool>.Ok(true);
     }
 
     private static UsuarioResponse ToResponse(Usuario u) =>

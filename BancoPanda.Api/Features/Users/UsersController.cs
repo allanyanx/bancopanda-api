@@ -14,11 +14,9 @@ public class UsersController(UsersService users) : ControllerBase
 {
     [HttpGet("me")]
     [ProducesResponseType<UsuarioResponse>(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Obtener(CancellationToken ct)
     {
         if (!TryGetUsuarioId(out var id)) return SesionInvalida();
-
         return ARespuesta(await users.ObtenerAsync(id, ct));
     }
 
@@ -28,8 +26,20 @@ public class UsersController(UsersService users) : ControllerBase
     public async Task<IActionResult> Actualizar(ActualizarPerfilRequest request, CancellationToken ct)
     {
         if (!TryGetUsuarioId(out var id)) return SesionInvalida();
-
         return ARespuesta(await users.ActualizarAsync(id, request, ct));
+    }
+
+    [HttpPut("me/contrasena")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CambiarContrasena(CambiarContrasenaRequest request, CancellationToken ct)
+    {
+        if (!TryGetUsuarioId(out var id)) return SesionInvalida();
+
+        var resultado = await users.CambiarContrasenaAsync(id, request, ct);
+        return resultado.EsExitoso
+            ? NoContent()
+            : Problem(detail: resultado.Error, statusCode: resultado.StatusCode);
     }
 
     private IActionResult ARespuesta(Resultado<UsuarioResponse> resultado) =>
