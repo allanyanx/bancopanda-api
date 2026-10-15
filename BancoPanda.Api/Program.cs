@@ -56,6 +56,13 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+// Crea o actualiza las tablas al arrancar (se activa con Database__AplicarMigraciones=true, p. ej. en Docker/Render)
+if (app.Configuration.GetValue<bool>("Database:AplicarMigraciones"))
+{
+    using var scope = app.Services.CreateScope();
+    scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.Migrate();
+}
+
 app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
