@@ -25,23 +25,33 @@ public class MobileCashService(AppDbContext db)
         if (await db.EfectivosMoviles.AnyAsync(e => e.SolicitudId == solicitudId, ct))
             return Resultado<EfectivoMovilResponse>.Fallo(YaGenerado, StatusCodes.Status409Conflict);
 
-        var cuentaId = await db.Cuentas
+        var origen = await db.Cuentas
             .Where(c => c.CuentaId == request.CuentaId && c.UsuarioId == usuarioId)
-            .Select(c => (Guid?)c.CuentaId)
+            .Select(c => new { c.CuentaId, c.Usuario.Telefono })
             .SingleOrDefaultAsync(ct);
 
-        if (cuentaId is null)
+        if (origen is null)
             return Resultado<EfectivoMovilResponse>.Fallo("Cuenta no encontrada", StatusCodes.Status404NotFound);
+
+        // "Mi número" (no llega teléfono) usa el celular registrado; "Otro número" usa el que llega.
+        var telefono = string.IsNullOrWhiteSpace(request.TelefonoDestino)
+            ? origen.Telefono
+            : request.TelefonoDestino.Trim();
+
+        if (string.IsNullOrWhiteSpace(telefono))
+            return Resultado<EfectivoMovilResponse>.Fallo(
+                "No tienes un celular registrado. Agrégalo en tu perfil o escribe otro número");
 
         await using var transaccion = await db.Database.BeginTransactionAsync(ct);
 
-        var cuenta = (await db.BloquearCuentasAsync([cuentaId.Value], ct))[cuentaId.Value];
+        var cuenta = (await db.BloquearCuentasAsync([origen.CuentaId], ct))[origen.CuentaId];
 
         if (cuenta.Saldo < monto)
             return Resultado<EfectivoMovilResponse>.Fallo("Saldo insuficiente para generar el efectivo móvil");
 
-        var telefono = request.TelefonoDestino.Trim();
-        var codigo = RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
+        // Dos códigos de 4 dígitos que se digitan en el cajero; se guardan juntos y cifrados.
+        var primerCodigo = RandomNumberGenerator.GetInt32(0, 10_000).ToString("D4");
+        var segundoCodigo = RandomNumberGenerator.GetInt32(0, 10_000).ToString("D4");
         var fecha = DateTime.UtcNow;
 
         cuenta.Saldo -= monto;
@@ -50,7 +60,7 @@ public class MobileCashService(AppDbContext db)
         {
             TelefonoDestino = telefono,
             Monto = monto,
-            CodigoHash = BCrypt.Net.BCrypt.HashPassword(codigo),
+            CodigoHash = BCrypt.Net.BCrypt.HashPassword(primerCodigo + segundoCodigo),
             FechaCreacion = fecha,
             FechaExpiracion = fecha.AddHours(HorasVigencia),
             SolicitudId = solicitudId,
@@ -79,7 +89,8 @@ public class MobileCashService(AppDbContext db)
 
         return Resultado<EfectivoMovilResponse>.Ok(new EfectivoMovilResponse(
             efectivo.EfectivoMovilId,
-            codigo,
+            primerCodigo,
+            segundoCodigo,
             efectivo.Monto,
             cuenta.Moneda,
             efectivo.TelefonoDestino,

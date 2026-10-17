@@ -167,7 +167,7 @@ Content-Type: application/json
   "monto": 5000.01
 }
 
-### Efectivo móvil: descuenta $20 y devuelve el código de 6 dígitos (solo esta vez)
+### Efectivo móvil con "Mi número": sin teléfono, usa el celular registrado y devuelve los dos códigos (solo esta vez)
 POST {{BancoPanda.Api_HostAddress}}/api/efectivo-movil
 Authorization: Bearer {{token}}
 Content-Type: application/json
@@ -175,7 +175,6 @@ Content-Type: application/json
 {
   "solicitudId": "22222222-2222-4222-8222-222222222222",
   "cuentaId": "{{cuentaId}}",
-  "telefonoDestino": "+593987654321",
   "monto": 20
 }
 
@@ -187,8 +186,19 @@ Content-Type: application/json
 {
   "solicitudId": "22222222-2222-4222-8222-222222222222",
   "cuentaId": "{{cuentaId}}",
-  "telefonoDestino": "+593987654321",
   "monto": 20
+}
+
+### Efectivo móvil con "Otro número": para el celular de otra persona
+POST {{BancoPanda.Api_HostAddress}}/api/efectivo-movil
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "solicitudId": "{{$guid}}",
+  "cuentaId": "{{cuentaId}}",
+  "telefonoDestino": "+593991234567",
+  "monto": 5
 }
 
 ### Efectivo móvil con celular sin +593: debe responder 400

@@ -13,9 +13,9 @@ public class EfectivoMovilRequest
     [Required(ErrorMessage = "Elige la cuenta")]
     public Guid? CuentaId { get; set; }
 
-    [Required(ErrorMessage = "Ingresa el celular de quien retira")]
+    // Opcional: si no llega, se usa el celular registrado del usuario.
     [RegularExpression(ReglasValidacion.Celular, ErrorMessage = ReglasValidacion.MensajeCelular)]
-    public string TelefonoDestino { get; set; } = string.Empty;
+    public string? TelefonoDestino { get; set; }
 
     [Required(ErrorMessage = "Ingresa el monto")]
     public decimal? Monto { get; set; }
@@ -23,7 +23,8 @@ public class EfectivoMovilRequest
 
 public record EfectivoMovilResponse(
     Guid EfectivoMovilId,
-    string Codigo,
+    string PrimerCodigo,
+    string SegundoCodigo,
     decimal Monto,
     string Moneda,
     string TelefonoDestino,

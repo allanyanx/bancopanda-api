@@ -160,7 +160,7 @@ Todos, excepto los de `auth`, piden el token en la cabecera `Authorization: Bear
 | GET | `/api/bancos` | Bancos disponibles para transferir (Banco Panda primero) |
 | GET | `/api/beneficiarios` | Beneficiarios frecuentes del usuario, el más reciente primero |
 | POST | `/api/transferencias` | Transfiere a una cuenta de Banco Panda o de otro banco. Devuelve `201` con el comprobante |
-| POST | `/api/efectivo-movil` | Descuenta el monto y genera un código de 6 dígitos para retirar sin tarjeta. Devuelve `201` |
+| POST | `/api/efectivo-movil` | Descuenta el monto y genera dos códigos de 4 dígitos para retirar sin tarjeta (con el celular registrado o con otro). Devuelve `201` |
 
 `limite` es opcional: por defecto 20, mínimo 1 y máximo 50.
 
@@ -198,12 +198,13 @@ Cuerpo de `POST /api/efectivo-movil`:
 {
   "solicitudId": "8a2d1c4b-7e6f-4a3b-9c2d-1e0f5a6b7c8d",
   "cuentaId": "c1000000-0000-4000-8000-000000000001",
-  "telefonoDestino": "+593987654321",
   "monto": 20
 }
 ```
 
-- El código se devuelve **una sola vez**: en la base solo se guarda cifrado (`codigo_hash`, BCrypt).
+- `telefonoDestino` es **opcional**: si no se envía ("Mi número" en la app) se usa el **celular registrado** del usuario; si se envía ("Otro número") debe tener el formato `+5939XXXXXXXX`.
+- Responde con **dos códigos de 4 dígitos** (`primerCodigo` y `segundoCodigo`), que se digitan en el cajero junto con el celular.
+- Los códigos se devuelven **una sola vez**: en la base se guardan juntos y cifrados (`codigo_hash`, BCrypt).
 - Vence a las **24 horas**. Estado inicial: `Pendiente` (otros estados: `Cobrado`, `Expirado`).
 - Se registra un movimiento `Egreso` con categoría `EfectivoMovil`.
 
