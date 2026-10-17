@@ -1,16 +1,20 @@
 @BancoPanda.Api_HostAddress = http://localhost:5258
 
-### Registro: crea el usuario, su cuenta de ahorros y su tarjeta
+# Los ejemplos usan los usuarios de Database/seed.sql (contraseña Panda2026).
+# Ejecuta primero "Login" para obtener el token.
+# {{$guid}} genera un identificador nuevo en cada envío (VS Code con REST Client y Visual Studio).
+
+### Registro: crea el usuario, su cuenta de ahorros con $100 y su tarjeta
 POST {{BancoPanda.Api_HostAddress}}/api/auth/registro
 Content-Type: application/json
 
 {
-  "nombreUsuario": "andrea.barroso",
+  "nombreUsuario": "maria.prueba",
   "cedula": "1234567890",
-  "nombres": "Andrea",
-  "apellidos": "Barroso Torres",
-  "correo": "prueba@bancopanda.test",
-  "telefono": "+593987654321",
+  "nombres": "María",
+  "apellidos": "Prueba Ruiz",
+  "correo": "maria.prueba@bancopanda.test",
+  "telefono": "+593998877665",
   "contrasena": "Panda2026",
   "aceptaTerminos": true
 }
@@ -21,37 +25,34 @@ POST {{BancoPanda.Api_HostAddress}}/api/auth/login
 Content-Type: application/json
 
 {
-  "nombreUsuario": "andrea.barroso",
+  "nombreUsuario": "andrea.demo",
   "contrasena": "Panda2026"
 }
 
-### Ver mi perfil (ejecuta antes "Login con nombre de usuario")
+### Ver mi perfil
 @token = {{login.response.body.$.token}}
 GET {{BancoPanda.Api_HostAddress}}/api/usuarios/me
 Authorization: Bearer {{token}}
 
-### Editar mi perfil 
+### Editar mi perfil
 PUT {{BancoPanda.Api_HostAddress}}/api/usuarios/me
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
+  "nombreUsuario": "andrea.demo",
   "nombres": "Andrea Melina",
   "apellidos": "Barroso Torres",
-  "correo": "prueba@bancopanda.test",
+  "correo": "andrea.barroso@bancopanda.test",
   "telefono": "+593987654321"
 }
 
-### Cambiar mi contraseña
-PUT {{BancoPanda.Api_HostAddress}}/api/usuarios/me
+### Cambiar mi contraseña: responde 204 (vuelve a ejecutar seed.sql para regresar a Panda2026)
+PUT {{BancoPanda.Api_HostAddress}}/api/usuarios/me/contrasena
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "nombres": "Andrea",
-  "apellidos": "Barroso Torres",
-  "correo": "prueba@bancopanda.test",
-  "telefono": "+593987654321",
   "contrasenaActual": "Panda2026",
   "contrasenaNueva": "Panda2027"
 }
@@ -60,10 +61,11 @@ Content-Type: application/json
 GET {{BancoPanda.Api_HostAddress}}/api/usuarios/me
 
 ### Mis cuentas con su saldo
+# @name cuentas
 GET {{BancoPanda.Api_HostAddress}}/api/cuentas
 Authorization: Bearer {{token}}
 
-### Mis tarjetas
+### Mis tarjetas (número completo, últimos 4 dígitos y cuenta asociada)
 # @name tarjetas
 GET {{BancoPanda.Api_HostAddress}}/api/tarjetas
 Authorization: Bearer {{token}}
@@ -72,7 +74,7 @@ Authorization: Bearer {{token}}
 GET {{BancoPanda.Api_HostAddress}}/api/movimientos?limite=5
 Authorization: Bearer {{token}}
 
-### Movimientos de mi primera tarjeta (ejecuta antes "Mis tarjetas")
+### Movimientos de mi primera tarjeta
 @tarjetaId = {{tarjetas.response.body.$[0].tarjetaId}}
 GET {{BancoPanda.Api_HostAddress}}/api/tarjetas/{{tarjetaId}}/movimientos?limite=10
 Authorization: Bearer {{token}}
@@ -84,3 +86,119 @@ Authorization: Bearer {{token}}
 ### Límite fuera de rango: debe responder 400
 GET {{BancoPanda.Api_HostAddress}}/api/movimientos?limite=0
 Authorization: Bearer {{token}}
+
+### Bancos para transferir (Banco Panda primero)
+GET {{BancoPanda.Api_HostAddress}}/api/bancos
+Authorization: Bearer {{token}}
+
+### Mis beneficiarios frecuentes
+GET {{BancoPanda.Api_HostAddress}}/api/beneficiarios
+Authorization: Bearer {{token}}
+
+### Transferir a Carlos en Banco Panda (el dinero llega a su cuenta)
+@cuentaId = {{cuentas.response.body.$[0].cuentaId}}
+POST {{BancoPanda.Api_HostAddress}}/api/transferencias
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "solicitudId": "{{$guid}}",
+  "cuentaOrigenId": "{{cuentaId}}",
+  "bancoId": "b0000000-0000-4000-8000-000000000001",
+  "numeroCuenta": "5000900003",
+  "cedula": "0923456781",
+  "monto": 10.50
+}
+
+### Transferir a otro banco (Banco Pichincha): solo se descuenta y se guarda el beneficiario
+POST {{BancoPanda.Api_HostAddress}}/api/transferencias
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "solicitudId": "{{$guid}}",
+  "cuentaOrigenId": "{{cuentaId}}",
+  "bancoId": "b0000000-0000-4000-8000-000000000003",
+  "numeroCuenta": "2201998877",
+  "cedula": "0912121212",
+  "nombre": "Juan Pérez",
+  "monto": 5
+}
+
+### Misma solicitud dos veces: la segunda devuelve el MISMO comprobante y no vuelve a cobrar
+POST {{BancoPanda.Api_HostAddress}}/api/transferencias
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "solicitudId": "11111111-1111-4111-8111-111111111111",
+  "cuentaOrigenId": "{{cuentaId}}",
+  "bancoId": "b0000000-0000-4000-8000-000000000001",
+  "numeroCuenta": "5000900003",
+  "cedula": "0923456781",
+  "monto": 1
+}
+
+### Banco Panda con una cédula que no es del dueño: debe responder 404
+POST {{BancoPanda.Api_HostAddress}}/api/transferencias
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "solicitudId": "{{$guid}}",
+  "cuentaOrigenId": "{{cuentaId}}",
+  "bancoId": "b0000000-0000-4000-8000-000000000001",
+  "numeroCuenta": "5000900003",
+  "cedula": "0999999999",
+  "monto": 1
+}
+
+### Monto mayor a $5000: debe responder 400
+POST {{BancoPanda.Api_HostAddress}}/api/transferencias
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "solicitudId": "{{$guid}}",
+  "cuentaOrigenId": "{{cuentaId}}",
+  "bancoId": "b0000000-0000-4000-8000-000000000003",
+  "numeroCuenta": "2201998877",
+  "cedula": "0912121212",
+  "monto": 5000.01
+}
+
+### Efectivo móvil: descuenta $20 y devuelve el código de 6 dígitos (solo esta vez)
+POST {{BancoPanda.Api_HostAddress}}/api/efectivo-movil
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "solicitudId": "22222222-2222-4222-8222-222222222222",
+  "cuentaId": "{{cuentaId}}",
+  "telefonoDestino": "+593987654321",
+  "monto": 20
+}
+
+### Efectivo móvil repetido (misma solicitud): debe responder 409 sin volver a cobrar
+POST {{BancoPanda.Api_HostAddress}}/api/efectivo-movil
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "solicitudId": "22222222-2222-4222-8222-222222222222",
+  "cuentaId": "{{cuentaId}}",
+  "telefonoDestino": "+593987654321",
+  "monto": 20
+}
+
+### Efectivo móvil con celular sin +593: debe responder 400
+POST {{BancoPanda.Api_HostAddress}}/api/efectivo-movil
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "solicitudId": "{{$guid}}",
+  "cuentaId": "{{cuentaId}}",
+  "telefonoDestino": "0987654321",
+  "monto": 5
+}

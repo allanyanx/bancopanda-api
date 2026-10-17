@@ -12,12 +12,14 @@ public class CardsService(AppDbContext db)
             .ThenBy(t => t.Cuenta.FechaApertura)
             .Select(t => new TarjetaResponse(
                 t.TarjetaId,
-                t.UltimosDigitos,
+                t.NumeroTarjeta,
+                t.NumeroTarjeta.Substring(12),
                 t.Marca,
                 t.Tipo,
                 t.FechaExpiracion,
                 t.Activa,
                 t.CuentaId,
+                t.Cuenta.NumeroCuenta,
                 t.Cuenta.Saldo,
                 t.Cuenta.Moneda))
             .ToListAsync(ct);

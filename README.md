@@ -9,18 +9,24 @@ Organizado por funcionalidad (*feature-first*):
 ```
 bancopanda-api/
 ├── BancoPanda.slnx                 # Solución
+├── Dockerfile                      # Imagen para Render (aplica las migraciones al arrancar)
 ├── Database/
-│   └── seed.sql                    # Datos de prueba (usuarios, cuentas, tarjetas y movimientos)
+│   └── seed.sql                    # Datos de prueba (usuarios, cuentas, tarjetas, movimientos y beneficiarios)
 └── BancoPanda.Api/
     ├── Data/
-    │   └── AppDbContext.cs         # Conexión con PostgreSQL (EF Core)
+    │   ├── AppDbContext.cs         # Conexión con PostgreSQL (EF Core) y bancos precargados
+    │   └── BloqueoCuentas.cs       # Bloquea las cuentas mientras se mueve dinero
     ├── Entities/                   # Tablas de la base de datos
     │   ├── Usuario.cs
     │   ├── Cuenta.cs
-    │   ├── Tarjeta.cs
+    │   ├── Tarjeta.cs              # Número de 16 dígitos
     │   ├── Movimiento.cs
-    │   └── Enum.cs                 # TipoCuenta, TipoMovimiento, CategoriaMovimiento...
-    ├── Common/                     # Resultado<T> (éxito o error) y ApiControllerBase (usuario del token)
+    │   ├── Banco.cs                # Bancos para transferir (Banco Panda y otros del país)
+    │   ├── Beneficiario.cs         # A quién transfirió cada usuario (frecuentes)
+    │   ├── Transferencia.cs        # Comprobante de cada transferencia
+    │   ├── EfectivoMovil.cs        # Retiro sin tarjeta con código
+    │   └── Enum.cs                 # TipoCuenta, CategoriaMovimiento, EstadoEfectivoMovil...
+    ├── Common/                     # Resultado<T>, ApiControllerBase, ReglasValidacion y ReglasMonto
     ├── Features/                   # Una carpeta por funcionalidad
     │   ├── Auth/                   # Registro y login (JWT)
     │   │   ├── AuthController.cs   # Endpoints
@@ -30,11 +36,16 @@ bancopanda-api/
     │   │   └── JwtOptions.cs       # Configuración del token
     │   ├── Users/                  # Perfil del usuario
     │   ├── Accounts/               # Cuentas y saldos
-    │   ├── Cards/                  # Tarjetas y sus movimientos
-    │   └── Movements/              # Movimientos recientes
+    │   ├── Cards/                  # Tarjetas, sus movimientos y GeneradorTarjeta
+    │   ├── Movements/              # Movimientos recientes
+    │   ├── Banks/                  # Lista de bancos
+    │   ├── Beneficiaries/          # Beneficiarios frecuentes
+    │   ├── Transfers/              # Transferencias
+    │   └── MobileCash/             # Efectivo móvil
     ├── Migrations/                 # Migraciones generadas por EF Core
     ├── Properties/
     │   └── launchSettings.json     # Puertos de ejecución local
+    ├── BancoPanda.Api.http         # Peticiones de ejemplo
     ├── appsettings.json            # Configuración (sin contraseñas)
     └── Program.cs                  # Punto de entrada y registro de servicios
 ```
@@ -88,10 +99,16 @@ Clave para firmar los tokens JWT (cualquier texto de **32 caracteres o más**):
 dotnet user-secrets set "Jwt:Clave" "escribe-aqui-una-clave-larga-y-aleatoria"
 ```
 
-## 4. Crear las tablas
+## 4. Crear o actualizar las tablas
 
 ```bash
 dotnet ef database update
+```
+
+Aplica solo las migraciones que falten; **no hace falta borrar la base**. Para ver cuáles están aplicadas:
+
+```bash
+dotnet ef migrations list
 ```
 
 ## 5. Levantar la API
@@ -108,7 +125,7 @@ Para comprobar que funciona, abre: http://localhost:5258/openapi/v1.json
 
 ## 6. Cargar datos de prueba (opcional)
 
-Un usuario recién registrado solo tiene su bono de bienvenida. Para ver el dashboard con varias cuentas, tarjetas y movimientos, ejecuta el script desde la raíz del repositorio:
+Un usuario recién registrado solo tiene su bono de bienvenida. Para ver el dashboard con varias cuentas, tarjetas, movimientos y beneficiarios, ejecuta el script desde la raíz del repositorio (después del paso 4):
 
 ```bash
 psql -U bancopanda_user -d bancopanda -f Database/seed.sql
@@ -116,14 +133,14 @@ psql -U bancopanda_user -d bancopanda -f Database/seed.sql
 
 También puedes abrir `Database/seed.sql` en pgAdmin o DBeaver y ejecutarlo completo.
 
-Crea dos usuarios (contraseña de ambos: `Panda2026`):
+Crea dos usuarios (contraseña de ambos: `Panda2026`). Cada cuenta queda con **$100**:
 
-| Correo | Cédula | Datos |
-|---|---|---|
-| `andrea.barroso@bancopanda.test` | `0912345678` | 2 cuentas, 2 tarjetas, 26 movimientos |
-| `carlos.mendoza@bancopanda.test` | `0923456781` | 1 cuenta, 2 tarjetas (una inactiva), 8 movimientos |
+| Usuario | Cédula | Cuentas | Datos |
+|---|---|---|---|
+| `andrea.demo` | `0912345678` | `5000900001` (ahorros), `5000900002` (corriente) | 2 tarjetas, 26 movimientos, 3 beneficiarios frecuentes |
+| `carlos.demo` | `0923456781` | `5000900003` (ahorros) | 2 tarjetas (una inactiva), 8 movimientos |
 
-Se puede ejecutar las veces que haga falta: borra lo que sembró antes y lo vuelve a crear con fechas recientes. No modifica a los usuarios registrados desde la app.
+Se puede ejecutar las veces que haga falta: borra lo que sembró antes (incluidas sus transferencias) y lo vuelve a crear con fechas recientes. No modifica a los usuarios registrados desde la app. Los bancos no están en el seed: los crea la migración.
 
 ## Endpoints
 
@@ -131,27 +148,83 @@ Todos, excepto los de `auth`, piden el token en la cabecera `Authorization: Bear
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| POST | `/api/auth/registro` | Crea el usuario con su cuenta de ahorros y su tarjeta. Devuelve la sesión iniciada |
+| POST | `/api/auth/registro` | Crea el usuario con su cuenta de ahorros, $100 de bienvenida y una tarjeta Visa de 16 dígitos. Devuelve la sesión iniciada |
 | POST | `/api/auth/login` | Inicia sesión con el nombre de usuario. Devuelve el token JWT |
 | GET | `/api/usuarios/me` | Datos del usuario |
-| PUT | `/api/usuarios/me` | Actualiza los datos del usuario y, opcionalmente, su contraseña |
+| PUT | `/api/usuarios/me` | Actualiza nombre de usuario, nombres, apellidos, correo y celular |
+| PUT | `/api/usuarios/me/contrasena` | Cambia la contraseña (pide la actual). Devuelve `204` |
 | GET | `/api/cuentas` | Cuentas del usuario con su saldo |
-| GET | `/api/tarjetas` | Tarjetas del usuario con el saldo de la cuenta a la que pertenecen |
-| GET | `/api/tarjetas/{tarjetaId}/movimientos?limite=20` | Movimientos de la cuenta de esa tarjeta, del más reciente al más antiguo. `404` si la tarjeta no es del usuario |
+| GET | `/api/tarjetas` | Tarjetas con su número completo, últimos 4 dígitos, cuenta asociada y saldo |
+| GET | `/api/tarjetas/{tarjetaId}/movimientos?limite=20` | Movimientos de la cuenta de esa tarjeta. `404` si la tarjeta no es del usuario |
 | GET | `/api/movimientos?limite=20` | Últimos movimientos de todas las cuentas del usuario |
+| GET | `/api/bancos` | Bancos disponibles para transferir (Banco Panda primero) |
+| GET | `/api/beneficiarios` | Beneficiarios frecuentes del usuario, el más reciente primero |
+| POST | `/api/transferencias` | Transfiere a una cuenta de Banco Panda o de otro banco. Devuelve `201` con el comprobante |
+| POST | `/api/efectivo-movil` | Descuenta el monto y genera un código de 6 dígitos para retirar sin tarjeta. Devuelve `201` |
 
 `limite` es opcional: por defecto 20, mínimo 1 y máximo 50.
 
-Hay peticiones de ejemplo en `BancoPanda.Api/BancoPanda.Api.http` (se ejecutan desde VS Code o Visual Studio).
+Hay peticiones de ejemplo de todos los endpoints en `BancoPanda.Api/BancoPanda.Api.http` (se ejecutan desde VS Code con la extensión REST Client o desde Visual Studio).
 
 Los errores se devuelven en formato *ProblemDetails*: el mensaje va en `detail` y los errores de validación en `errors`.
+
+### Transferencias
+
+Cuerpo de `POST /api/transferencias`:
+
+```json
+{
+  "solicitudId": "1f0c6f7e-3b8a-4b8e-9a7d-2a4c1b5e9d10",
+  "cuentaOrigenId": "c1000000-0000-4000-8000-000000000001",
+  "bancoId": "b0000000-0000-4000-8000-000000000001",
+  "numeroCuenta": "5000900003",
+  "cedula": "0923456781",
+  "nombre": "Carlos Mendoza",
+  "monto": 12.50
+}
+```
+
+- **Banco Panda** (`b0000000-0000-4000-8000-000000000001`): la cuenta debe existir y la cédula debe ser de su dueño; el dinero se descuenta del origen y **llega al destino** en la misma transacción. Si es otra cuenta del mismo usuario, cuenta como "entre mis cuentas".
+- **Otros bancos**: solo se descuenta del origen (el envío se simula).
+- El beneficiario se guarda o actualiza solo, y aparece luego en `GET /api/beneficiarios`.
+- `nombre` es opcional; en Banco Panda se usa el nombre real del titular.
+- `referencia` del comprobante = fecha de Ecuador + 6 dígitos (ej. `20261016158704`).
+
+### Efectivo móvil
+
+Cuerpo de `POST /api/efectivo-movil`:
+
+```json
+{
+  "solicitudId": "8a2d1c4b-7e6f-4a3b-9c2d-1e0f5a6b7c8d",
+  "cuentaId": "c1000000-0000-4000-8000-000000000001",
+  "telefonoDestino": "+593987654321",
+  "monto": 20
+}
+```
+
+- El código se devuelve **una sola vez**: en la base solo se guarda cifrado (`codigo_hash`, BCrypt).
+- Vence a las **24 horas**. Estado inicial: `Pendiente` (otros estados: `Cobrado`, `Expirado`).
+- Se registra un movimiento `Egreso` con categoría `EfectivoMovil`.
+
+### Reglas del dinero
+
+- Monto de **$0.01 a $5000**, con máximo 2 decimales, y la cuenta debe tener saldo suficiente.
+- Todo ocurre en **una transacción** con las cuentas **bloqueadas** (`SELECT … FOR UPDATE`): si dos operaciones llegan a la vez, la segunda espera y ve el saldo real.
+- **`solicitudId`** lo genera la app una vez por intento. Si llega repetido, la transferencia devuelve el mismo comprobante y el efectivo móvil responde `409`, así **nunca se cobra dos veces** al reintentar.
+
+## Despliegue (Render + Supabase)
+
+- El `Dockerfile` define `Database__AplicarMigraciones=true`: al arrancar en Render, la API aplica sola las migraciones pendientes en la base de Supabase. Basta con hacer *push* a la rama que vigila Render.
+- La cadena de conexión y la clave JWT de producción están en las variables de entorno de Render (`ConnectionStrings__Default`, `Jwt__Clave`), nunca en el repositorio.
+- Los datos de prueba **no** se cargan solos: si se quieren en Supabase, se pega `Database/seed.sql` en el **SQL Editor** de Supabase **después** de que Render termine de desplegar. Ojo: la contraseña de esos usuarios está en este repositorio.
 
 ## Convenciones
 
 - Las llaves primarias llevan el nombre de la entidad (`UsuarioId`, `CuentaId`...), nunca solo `Id`.
 - Los campos se llaman igual en la base de datos (`usuario_id`), en el backend (`UsuarioId`) y en el JSON que recibe la app (`usuarioId`).
-- La estructura de la base de datos solo se modifica con migraciones de EF Core; no hay triggers. El único script SQL es `Database/seed.sql`, que solo inserta datos de prueba.
-- Los enums viajan como texto en el JSON (`"Egreso"`, `"Comida"`, `"Visa"`), igual que se guardan en la base de datos.
+- La estructura de la base de datos solo se modifica con migraciones de EF Core; no hay triggers. El único script SQL aparte es `Database/seed.sql`, que solo inserta datos de prueba.
+- Los enums viajan como texto en el JSON (`"Egreso"`, `"EfectivoMovil"`, `"Visa"`), igual que se guardan en la base de datos.
 - Los montos de los movimientos son siempre positivos; `tipo` (`Ingreso` o `Egreso`) indica si suman o restan.
 
 ## Problemas comunes
@@ -162,3 +235,5 @@ Los errores se devuelven en formato *ProblemDetails*: el mensaje va en `detail` 
 | `dotnet ef` no se reconoce | Cierra y vuelve a abrir la terminal |
 | `password authentication failed` | Revisa la contraseña con `dotnet user-secrets list` |
 | `database "bancopanda" does not exist` | Repite el paso 2 |
+| El build falla porque el archivo está en uso | Hay un `dotnet run` abierto: ciérralo con `Ctrl + C` antes de `dotnet ef` |
+| `seed.sql` falla con `column ... does not exist` | Faltan migraciones: ejecuta primero `dotnet ef database update` |

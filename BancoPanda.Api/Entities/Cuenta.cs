@@ -14,4 +14,6 @@ public class Cuenta
 
     public List<Tarjeta> Tarjetas { get; set; } = [];
     public List<Movimiento> Movimientos { get; set; } = [];
+    public List<Transferencia> Transferencias { get; set; } = [];
+    public List<EfectivoMovil> EfectivosMoviles { get; set; } = [];
 }

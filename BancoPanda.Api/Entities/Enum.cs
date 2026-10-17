@@ -20,7 +20,15 @@ public enum CategoriaMovimiento
     Transporte,
     Compras,
     Servicios,
+    EfectivoMovil,
     Otros
+}
+
+public enum EstadoEfectivoMovil
+{
+    Pendiente,
+    Cobrado,
+    Expirado
 }
 
 public enum MarcaTarjeta

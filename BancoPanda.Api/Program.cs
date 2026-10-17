@@ -3,8 +3,12 @@ using System.Text.Json.Serialization;
 using BancoPanda.Api.Data;
 using BancoPanda.Api.Features.Accounts;
 using BancoPanda.Api.Features.Auth;
+using BancoPanda.Api.Features.Banks;
+using BancoPanda.Api.Features.Beneficiaries;
 using BancoPanda.Api.Features.Cards;
+using BancoPanda.Api.Features.MobileCash;
 using BancoPanda.Api.Features.Movements;
+using BancoPanda.Api.Features.Transfers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -45,6 +49,10 @@ builder.Services.AddScoped<UsersService>();
 builder.Services.AddScoped<AccountsService>();
 builder.Services.AddScoped<CardsService>();
 builder.Services.AddScoped<MovementsService>();
+builder.Services.AddScoped<TransfersService>();
+builder.Services.AddScoped<BanksService>();
+builder.Services.AddScoped<BeneficiariesService>();
+builder.Services.AddScoped<MobileCashService>();
 
 builder.Services.AddProblemDetails();
 

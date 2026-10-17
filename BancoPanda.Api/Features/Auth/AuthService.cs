@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using BancoPanda.Api.Common;
 using BancoPanda.Api.Data;
 using BancoPanda.Api.Entities;
+using BancoPanda.Api.Features.Cards;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -55,7 +56,7 @@ public class AuthService(AppDbContext db, TokenService tokens)
 
         cuenta.Tarjetas.Add(new Tarjeta
         {
-            UltimosDigitos = RandomNumberGenerator.GetInt32(0, 10_000).ToString("D4"),
+            NumeroTarjeta = await GenerarNumeroTarjetaAsync(ct),
             Marca = MarcaTarjeta.Visa,
             Tipo = TipoTarjeta.Debito,
             FechaExpiracion = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(4)
@@ -108,6 +109,15 @@ public class AuthService(AppDbContext db, TokenService tokens)
         {
             var numero = "5000" + RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
             if (!await db.Cuentas.AnyAsync(c => c.NumeroCuenta == numero, ct)) return numero;
+        }
+    }
+
+    private async Task<string> GenerarNumeroTarjetaAsync(CancellationToken ct)
+    {
+        while (true)
+        {
+            var numero = GeneradorTarjeta.Generar(MarcaTarjeta.Visa);
+            if (!await db.Tarjetas.AnyAsync(t => t.NumeroTarjeta == numero, ct)) return numero;
         }
     }
 }

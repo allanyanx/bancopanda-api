@@ -3,7 +3,7 @@
 public class Tarjeta
 {
     public Guid TarjetaId { get; set; }
-    public string UltimosDigitos { get; set; } = string.Empty;   
+    public string NumeroTarjeta { get; set; } = string.Empty;
     public MarcaTarjeta Marca { get; set; }
     public TipoTarjeta Tipo { get; set; }
     public DateOnly FechaExpiracion { get; set; }

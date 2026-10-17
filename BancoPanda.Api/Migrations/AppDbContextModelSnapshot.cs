@@ -22,6 +22,134 @@ namespace BancoPanda.Api.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("BancoPanda.Api.Entities.Banco", b =>
+                {
+                    b.Property<Guid>("BancoId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("banco_id");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean")
+                        .HasColumnName("activo");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("nombre");
+
+                    b.HasKey("BancoId")
+                        .HasName("pk_bancos");
+
+                    b.HasIndex("Nombre")
+                        .IsUnique()
+                        .HasDatabaseName("ix_bancos_nombre");
+
+                    b.ToTable("bancos", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            BancoId = new Guid("b0000000-0000-4000-8000-000000000001"),
+                            Activo = true,
+                            Nombre = "Banco Panda"
+                        },
+                        new
+                        {
+                            BancoId = new Guid("b0000000-0000-4000-8000-000000000002"),
+                            Activo = true,
+                            Nombre = "Banco Guayaquil"
+                        },
+                        new
+                        {
+                            BancoId = new Guid("b0000000-0000-4000-8000-000000000003"),
+                            Activo = true,
+                            Nombre = "Banco Pichincha"
+                        },
+                        new
+                        {
+                            BancoId = new Guid("b0000000-0000-4000-8000-000000000004"),
+                            Activo = true,
+                            Nombre = "Banco Bolivariano"
+                        },
+                        new
+                        {
+                            BancoId = new Guid("b0000000-0000-4000-8000-000000000005"),
+                            Activo = true,
+                            Nombre = "Produbanco"
+                        },
+                        new
+                        {
+                            BancoId = new Guid("b0000000-0000-4000-8000-000000000006"),
+                            Activo = true,
+                            Nombre = "Banco del Pacífico"
+                        },
+                        new
+                        {
+                            BancoId = new Guid("b0000000-0000-4000-8000-000000000007"),
+                            Activo = true,
+                            Nombre = "Banco Amazonas"
+                        },
+                        new
+                        {
+                            BancoId = new Guid("b0000000-0000-4000-8000-000000000008"),
+                            Activo = true,
+                            Nombre = "Banco Internacional"
+                        },
+                        new
+                        {
+                            BancoId = new Guid("b0000000-0000-4000-8000-000000000009"),
+                            Activo = true,
+                            Nombre = "Banco del Austro"
+                        });
+                });
+
+            modelBuilder.Entity("BancoPanda.Api.Entities.Beneficiario", b =>
+                {
+                    b.Property<Guid>("BeneficiarioId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("beneficiario_id");
+
+                    b.Property<Guid>("BancoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("banco_id");
+
+                    b.Property<string>("Cedula")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("cedula");
+
+                    b.Property<string>("Nombre")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("nombre");
+
+                    b.Property<string>("NumeroCuenta")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("numero_cuenta");
+
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("usuario_id");
+
+                    b.HasKey("BeneficiarioId")
+                        .HasName("pk_beneficiarios");
+
+                    b.HasIndex("BancoId")
+                        .HasDatabaseName("ix_beneficiarios_banco_id");
+
+                    b.HasIndex("UsuarioId", "BancoId", "NumeroCuenta")
+                        .IsUnique()
+                        .HasDatabaseName("ix_beneficiarios_usuario_id_banco_id_numero_cuenta");
+
+                    b.ToTable("beneficiarios", (string)null);
+                });
+
             modelBuilder.Entity("BancoPanda.Api.Entities.Cuenta", b =>
                 {
                     b.Property<Guid>("CuentaId")
@@ -71,6 +199,72 @@ namespace BancoPanda.Api.Migrations
                         .HasDatabaseName("ix_cuentas_usuario_id");
 
                     b.ToTable("cuentas", (string)null);
+                });
+
+            modelBuilder.Entity("BancoPanda.Api.Entities.EfectivoMovil", b =>
+                {
+                    b.Property<Guid>("EfectivoMovilId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("efectivo_movil_id");
+
+                    b.Property<string>("CodigoHash")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("codigo_hash");
+
+                    b.Property<Guid>("CuentaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("cuenta_id");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("character varying(15)")
+                        .HasColumnName("estado");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_creacion");
+
+                    b.Property<DateTime>("FechaExpiracion")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_expiracion");
+
+                    b.Property<decimal>("Monto")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("monto");
+
+                    b.Property<Guid>("MovimientoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("movimiento_id");
+
+                    b.Property<Guid>("SolicitudId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("solicitud_id");
+
+                    b.Property<string>("TelefonoDestino")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("character varying(15)")
+                        .HasColumnName("telefono_destino");
+
+                    b.HasKey("EfectivoMovilId")
+                        .HasName("pk_efectivos_moviles");
+
+                    b.HasIndex("CuentaId")
+                        .HasDatabaseName("ix_efectivos_moviles_cuenta_id");
+
+                    b.HasIndex("MovimientoId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_efectivos_moviles_movimiento_id");
+
+                    b.HasIndex("SolicitudId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_efectivos_moviles_solicitud_id");
+
+                    b.ToTable("efectivos_moviles", (string)null);
                 });
 
             modelBuilder.Entity("BancoPanda.Api.Entities.Movimiento", b =>
@@ -145,18 +339,18 @@ namespace BancoPanda.Api.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("marca");
 
+                    b.Property<string>("NumeroTarjeta")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character(16)")
+                        .HasColumnName("numero_tarjeta")
+                        .IsFixedLength();
+
                     b.Property<string>("Tipo")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
                         .HasColumnName("tipo");
-
-                    b.Property<string>("UltimosDigitos")
-                        .IsRequired()
-                        .HasMaxLength(4)
-                        .HasColumnType("character(4)")
-                        .HasColumnName("ultimos_digitos")
-                        .IsFixedLength();
 
                     b.HasKey("TarjetaId")
                         .HasName("pk_tarjetas");
@@ -164,7 +358,73 @@ namespace BancoPanda.Api.Migrations
                     b.HasIndex("CuentaId")
                         .HasDatabaseName("ix_tarjetas_cuenta_id");
 
+                    b.HasIndex("NumeroTarjeta")
+                        .IsUnique()
+                        .HasDatabaseName("ix_tarjetas_numero_tarjeta");
+
                     b.ToTable("tarjetas", (string)null);
+                });
+
+            modelBuilder.Entity("BancoPanda.Api.Entities.Transferencia", b =>
+                {
+                    b.Property<Guid>("TransferenciaId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("transferencia_id");
+
+                    b.Property<Guid>("BeneficiarioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("beneficiario_id");
+
+                    b.Property<Guid>("CuentaOrigenId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("cuenta_origen_id");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha");
+
+                    b.Property<decimal>("Monto")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("monto");
+
+                    b.Property<Guid>("MovimientoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("movimiento_id");
+
+                    b.Property<string>("Referencia")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("referencia");
+
+                    b.Property<Guid>("SolicitudId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("solicitud_id");
+
+                    b.HasKey("TransferenciaId")
+                        .HasName("pk_transferencias");
+
+                    b.HasIndex("BeneficiarioId")
+                        .HasDatabaseName("ix_transferencias_beneficiario_id");
+
+                    b.HasIndex("CuentaOrigenId")
+                        .HasDatabaseName("ix_transferencias_cuenta_origen_id");
+
+                    b.HasIndex("MovimientoId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_transferencias_movimiento_id");
+
+                    b.HasIndex("Referencia")
+                        .IsUnique()
+                        .HasDatabaseName("ix_transferencias_referencia");
+
+                    b.HasIndex("SolicitudId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_transferencias_solicitud_id");
+
+                    b.ToTable("transferencias", (string)null);
                 });
 
             modelBuilder.Entity("BancoPanda.Api.Entities.Usuario", b =>
@@ -236,6 +496,27 @@ namespace BancoPanda.Api.Migrations
                     b.ToTable("usuarios", (string)null);
                 });
 
+            modelBuilder.Entity("BancoPanda.Api.Entities.Beneficiario", b =>
+                {
+                    b.HasOne("BancoPanda.Api.Entities.Banco", "Banco")
+                        .WithMany()
+                        .HasForeignKey("BancoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_beneficiarios_bancos_banco_id");
+
+                    b.HasOne("BancoPanda.Api.Entities.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_beneficiarios_usuarios_usuario_id");
+
+                    b.Navigation("Banco");
+
+                    b.Navigation("Usuario");
+                });
+
             modelBuilder.Entity("BancoPanda.Api.Entities.Cuenta", b =>
                 {
                     b.HasOne("BancoPanda.Api.Entities.Usuario", "Usuario")
@@ -246,6 +527,27 @@ namespace BancoPanda.Api.Migrations
                         .HasConstraintName("fk_cuentas_usuarios_usuario_id");
 
                     b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("BancoPanda.Api.Entities.EfectivoMovil", b =>
+                {
+                    b.HasOne("BancoPanda.Api.Entities.Cuenta", "Cuenta")
+                        .WithMany("EfectivosMoviles")
+                        .HasForeignKey("CuentaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_efectivos_moviles_cuentas_cuenta_id");
+
+                    b.HasOne("BancoPanda.Api.Entities.Movimiento", "Movimiento")
+                        .WithOne()
+                        .HasForeignKey("BancoPanda.Api.Entities.EfectivoMovil", "MovimientoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_efectivos_moviles_movimientos_movimiento_id");
+
+                    b.Navigation("Cuenta");
+
+                    b.Navigation("Movimiento");
                 });
 
             modelBuilder.Entity("BancoPanda.Api.Entities.Movimiento", b =>
@@ -272,11 +574,45 @@ namespace BancoPanda.Api.Migrations
                     b.Navigation("Cuenta");
                 });
 
+            modelBuilder.Entity("BancoPanda.Api.Entities.Transferencia", b =>
+                {
+                    b.HasOne("BancoPanda.Api.Entities.Beneficiario", "Beneficiario")
+                        .WithMany()
+                        .HasForeignKey("BeneficiarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_transferencias_beneficiarios_beneficiario_id");
+
+                    b.HasOne("BancoPanda.Api.Entities.Cuenta", "CuentaOrigen")
+                        .WithMany("Transferencias")
+                        .HasForeignKey("CuentaOrigenId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_transferencias_cuentas_cuenta_origen_id");
+
+                    b.HasOne("BancoPanda.Api.Entities.Movimiento", "Movimiento")
+                        .WithOne()
+                        .HasForeignKey("BancoPanda.Api.Entities.Transferencia", "MovimientoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_transferencias_movimientos_movimiento_id");
+
+                    b.Navigation("Beneficiario");
+
+                    b.Navigation("CuentaOrigen");
+
+                    b.Navigation("Movimiento");
+                });
+
             modelBuilder.Entity("BancoPanda.Api.Entities.Cuenta", b =>
                 {
+                    b.Navigation("EfectivosMoviles");
+
                     b.Navigation("Movimientos");
 
                     b.Navigation("Tarjetas");
+
+                    b.Navigation("Transferencias");
                 });
 
             modelBuilder.Entity("BancoPanda.Api.Entities.Usuario", b =>
